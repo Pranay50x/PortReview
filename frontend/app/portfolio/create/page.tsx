@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { PartyPopper, Sparkles, Rocket, Lightbulb } from 'lucide-react';
 
 export default function CreatePortfolio() {
   const router = useRouter();
@@ -207,7 +208,10 @@ export default function CreatePortfolio() {
           {step === 3 && (
             <Card>
               <CardHeader>
-                <CardTitle>🎉 Portfolio Created Successfully!</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <PartyPopper className="w-6 h-6 text-emerald-500" />
+                  Portfolio Created Successfully!
+                </CardTitle>
                 <CardDescription>
                   Your AI-powered portfolio is ready with personalized insights
                 </CardDescription>
@@ -226,7 +230,10 @@ export default function CreatePortfolio() {
 
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-green-600 mb-2">✨ Key Strengths Identified</h4>
+                    <h4 className="font-semibold text-green-600 mb-2 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      Key Strengths Identified
+                    </h4>
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="default" className="bg-green-100 text-green-700">Frontend Development</Badge>
                       <Badge variant="default" className="bg-green-100 text-green-700">API Design</Badge>
@@ -235,13 +242,18 @@ export default function CreatePortfolio() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-blue-600 mb-2">🚀 Career Recommendations</h4>
+                    <h4 className="font-semibold text-blue-600 mb-2 flex items-center gap-2">
+                      <Rocket className="w-4 h-4" />
+                      Career Recommendations
+                    </h4>
                     <div className="space-y-2">
-                      <div className="p-3 bg-blue-50 rounded-lg text-sm">
-                        💡 Consider Senior Frontend Engineer roles
+                      <div className="p-3 bg-blue-50 rounded-lg text-sm flex items-center gap-2">
+                        <Lightbulb className="w-4 h-4 text-blue-600" />
+                        Consider Senior Frontend Engineer roles
                       </div>
-                      <div className="p-3 bg-blue-50 rounded-lg text-sm">
-                        💡 Full-Stack Team Lead positions match your profile
+                      <div className="p-3 bg-blue-50 rounded-lg text-sm flex items-center gap-2">
+                        <Lightbulb className="w-4 h-4 text-blue-600" />
+                        Full-Stack Team Lead positions match your profile
                       </div>
                     </div>
                   </div>

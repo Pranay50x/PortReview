@@ -1,141 +1,392 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Code, Target, Github, Sparkles, AlertCircle } from 'lucide-react';
+import { signIn, signInWithGitHub, signUp, validateEmail, validatePassword, isAuthenticated } from '@/lib/auth';
 
-export default function Login() {
-  const [userType, setUserType] = useState<'developer' | 'recruiter'>('developer');
+export default function LoginPage() {
+  const router = useRouter();
+  const [userType, setUserType] = useState<'developer' | 'recruiter' | null>(null);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [githubUsername, setGithubUsername] = useState('');
+  const [company, setCompany] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleGitHubLogin = async (type: 'developer' | 'recruiter') => {
-    // GitHub OAuth URL - this will be connected to your backend
-    const githubClientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/auth/callback`;
-    const scope = 'user:email,read:user';
-    const state = `${type}_${Math.random().toString(36).substring(7)}`;
-    
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
-    
-    // Store user type in localStorage for callback
-    localStorage.setItem('auth_user_type', type);
-    
-    window.location.href = githubAuthUrl;
+  useEffect(() => {
+    // Redirect if already authenticated
+    if (isAuthenticated()) {
+      const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+      router.push(`/dashboard/${user.type}`);
+    }
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      if (isSignUp) {
+        // Sign up
+        if (!validateEmail(email)) {
+          setError('Please enter a valid email address');
+          setLoading(false);
+          return;
+        }
+
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.isValid) {
+          setError(passwordValidation.errors[0]);
+          setLoading(false);
+          return;
+        }
+
+        if (!name.trim()) {
+          setError('Please enter your full name');
+          setLoading(false);
+          return;
+        }
+
+        if (userType === 'developer' && !githubUsername.trim()) {
+          setError('GitHub username is required for developers');
+          setLoading(false);
+          return;
+        }
+
+        if (userType === 'recruiter' && !company.trim()) {
+          setError('Company name is required for recruiters');
+          setLoading(false);
+          return;
+        }
+
+        const result = await signUp(
+          name,
+          email,
+          password,
+          userType!,
+          githubUsername,
+          company
+        );
+
+        if (result.success) {
+          router.push(`/dashboard/${userType}`);
+        } else {
+          setError(result.error || 'Sign up failed');
+        }
+      } else {
+        // Sign in
+        const result = await signIn(email, password);
+        
+        if (result.success) {
+          router.push(`/dashboard/${result.user!.type}`);
+        } else {
+          setError(result.error || 'Sign in failed');
+        }
+      }
+    } catch (err) {
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleGitHubLogin = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await signInWithGitHub(userType!);
+      
+      if (result.success) {
+        router.push(`/dashboard/${userType}`);
+      } else {
+        setError(result.error || 'GitHub sign in failed');
+      }
+    } catch (err) {
+      setError('GitHub sign in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!userType) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        {/* Animated Background */}
+        <div className="fixed inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50" />
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl animate-pulse delay-2000" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-4xl">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
+              <Sparkles className="w-8 h-8 text-cyan-400" />
+              Welcome to PortReviewer
+              <Sparkles className="w-8 h-8 text-cyan-400" />
+            </h1>
+            <p className="text-xl text-slate-300">Choose your role to get started</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Developer Card */}
+            <Card 
+              className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 hover:bg-slate-700/50 transition-all duration-300 cursor-pointer group"
+              onClick={() => setUserType('developer')}
+            >
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 w-20 h-20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Code className="w-10 h-10 text-cyan-400" />
+                </div>
+                <CardTitle className="text-2xl text-white">I'm a Developer</CardTitle>
+                <CardDescription className="text-slate-300">
+                  Showcase your coding skills and get professional portfolio reviews
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button 
+                  className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUserType('developer');
+                  }}
+                >
+                  Continue as Developer
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Recruiter Card */}
+            <Card 
+              className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 hover:bg-slate-700/50 transition-all duration-300 cursor-pointer group"
+              onClick={() => setUserType('recruiter')}
+            >
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 p-4 rounded-full bg-gradient-to-br from-teal-500/20 to-green-500/20 w-20 h-20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Target className="w-10 h-10 text-teal-400" />
+                </div>
+                <CardTitle className="text-2xl text-white">I'm a Recruiter</CardTitle>
+                <CardDescription className="text-slate-300">
+                  Find top talent and review developer portfolios with AI insights
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center">
+                <Button 
+                  className="w-full bg-gradient-to-r from-teal-600 to-green-600 hover:from-teal-500 hover:to-green-500 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUserType('recruiter');
+                  }}
+                >
+                  Continue as Recruiter
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-8">
+            <p className="text-slate-400">
+              Don't have an account? 
+              <span className="text-cyan-400 ml-2 hover:text-cyan-300 cursor-pointer">
+                Sign up here
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <Link href="/" className="text-2xl font-bold text-blue-600">
-            PortReviewer
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600">Sign in with GitHub to continue</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      {/* Animated Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl animate-pulse delay-2000" />
+      </div>
 
-        {/* User Type Selection */}
-        <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
-          <button
-            onClick={() => setUserType('developer')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              userType === 'developer'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            👨‍💻 Developer
-          </button>
-          <button
-            onClick={() => setUserType('recruiter')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              userType === 'recruiter'
-                ? 'bg-white text-green-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            🎯 Recruiter
-          </button>
-        </div>
-
-        {/* Login Cards */}
-        {userType === 'developer' ? (
-          <Card className="border-2 border-blue-200">
-            <CardHeader className="text-center space-y-3">
-              <div className="text-4xl">👨‍💻</div>
-              <CardTitle className="text-blue-600">Developer Login</CardTitle>
-              <CardDescription>
-                Transform your GitHub profile into a professional portfolio
-              </CardDescription>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <Badge variant="secondary">Portfolio Generation</Badge>
-                <Badge variant="secondary">Code Analysis</Badge>
-                <Badge variant="secondary">Career Insights</Badge>
+      <div className="relative z-10 w-full max-w-md">
+        <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 p-3 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 w-16 h-16 flex items-center justify-center">
+              {userType === 'developer' ? (
+                <Code className="w-8 h-8 text-cyan-400" />
+              ) : (
+                <Target className="w-8 h-8 text-teal-400" />
+              )}
+            </div>
+            <CardTitle className="text-2xl text-white">
+              {userType === 'developer' ? 'Developer' : 'Recruiter'} {isSignUp ? 'Sign Up' : 'Login'}
+            </CardTitle>
+            <CardDescription className="text-slate-300">
+              {isSignUp ? 'Create your account to get started' : 'Sign in to your account to continue'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {error && (
+              <div className="p-3 bg-red-900/30 border border-red-700/50 rounded-lg flex items-center gap-2 text-red-300">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">{error}</span>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            )}
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-slate-300">Full Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                    required
+                  />
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-300">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-slate-300">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder={isSignUp ? "Create a strong password" : "Enter your password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                  required
+                />
+                {isSignUp && (
+                  <div className="text-xs text-slate-400 space-y-1">
+                    <p>Password must contain:</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>At least 8 characters</li>
+                      <li>One uppercase and lowercase letter</li>
+                      <li>One number and one special character</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {isSignUp && userType === 'developer' && (
+                <div className="space-y-2">
+                  <Label htmlFor="github" className="text-slate-300">GitHub Username</Label>
+                  <Input
+                    id="github"
+                    type="text"
+                    placeholder="Your GitHub username"
+                    value={githubUsername}
+                    onChange={(e) => setGithubUsername(e.target.value)}
+                    className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                    required
+                  />
+                </div>
+              )}
+
+              {isSignUp && userType === 'recruiter' && (
+                <div className="space-y-2">
+                  <Label htmlFor="company" className="text-slate-300">Company</Label>
+                  <Input
+                    id="company"
+                    type="text"
+                    placeholder="Your company name"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                    required
+                  />
+                </div>
+              )}
+              
               <Button 
-                onClick={() => handleGitHubLogin('developer')}
-                className="w-full bg-blue-600 hover:bg-blue-700" 
-                size="lg"
+                type="submit" 
+                disabled={loading}
+                className={`w-full text-white ${
+                  userType === 'developer' 
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500'
+                    : 'bg-gradient-to-r from-teal-600 to-green-600 hover:from-teal-500 hover:to-green-500'
+                } disabled:opacity-50`}
               >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                </svg>
-                Continue with GitHub
+                {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
               </Button>
-              <div className="text-center text-sm text-gray-600">
-                Create your professional developer portfolio in minutes
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="border-2 border-green-200">
-            <CardHeader className="text-center space-y-3">
-              <div className="text-4xl">🎯</div>
-              <CardTitle className="text-green-600">Recruiter Login</CardTitle>
-              <CardDescription>
-                Access intelligent candidate screening and analysis tools
-              </CardDescription>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <Badge variant="secondary">Smart Screening</Badge>
-                <Badge variant="secondary">Code Quality</Badge>
-                <Badge variant="secondary">Team Matching</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button 
-                onClick={() => handleGitHubLogin('recruiter')}
-                className="w-full bg-green-600 hover:bg-green-700" 
-                size="lg"
-              >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                </svg>
-                Continue with GitHub
-              </Button>
-              <div className="text-center text-sm text-gray-600">
-                Find the perfect developers with AI-powered insights
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            </form>
 
-        {/* Footer */}
-        <div className="text-center text-sm text-gray-600">
-          <p>
-            By continuing, you agree to our{' '}
-            <Link href="/terms" className="text-blue-600 hover:underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-blue-600 hover:underline">
-              Privacy Policy
-            </Link>
-          </p>
-        </div>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-600" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-slate-800/50 text-slate-400">Or continue with</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading}
+              className="w-full border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700"
+              onClick={handleGitHubLogin}
+            >
+              <Github className="w-4 h-4 mr-2" />
+              Continue with GitHub
+            </Button>
+
+            <div className="text-center space-y-2">
+              <button
+                type="button"
+                onClick={() => setUserType(null)}
+                className="text-sm text-slate-400 hover:text-cyan-400 transition-colors"
+              >
+                ← Back to role selection
+              </button>
+              <div className="text-sm text-slate-400">
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setError('');
+                    setEmail('');
+                    setPassword('');
+                    setName('');
+                    setGithubUsername('');
+                    setCompany('');
+                  }}
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  {isSignUp ? 'Sign in' : 'Sign up'}
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

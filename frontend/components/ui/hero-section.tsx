@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { AnimatedButton } from './animated-button';
+import { Rocket, Code, Target } from 'lucide-react';
 import Link from 'next/link';
 
 export const HeroSection: React.FC = () => {
@@ -51,7 +52,8 @@ export const HeroSection: React.FC = () => {
           variants={itemVariants}
         >
           <span className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse" />
-          🚀 Revolutionizing Technical Recruiting
+          <Rocket className="w-4 h-4 mr-2 text-cyan-400" />
+          Revolutionizing Technical Recruiting
         </motion.div>
 
         <motion.h1
@@ -87,7 +89,7 @@ export const HeroSection: React.FC = () => {
             asChild
           >
             <Link href="/auth/login?type=developer">
-              <span className="mr-2">👨‍💻</span>
+              <Code className="w-5 h-5 mr-2" />
               Create Portfolio
             </Link>
           </AnimatedButton>
@@ -99,7 +101,7 @@ export const HeroSection: React.FC = () => {
             asChild
           >
             <Link href="/auth/login?type=recruiter">
-              <span className="mr-2">🎯</span>
+              <Target className="w-5 h-5 mr-2" />
               Start Recruiting
             </Link>
           </AnimatedButton>

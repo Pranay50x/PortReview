@@ -3,45 +3,53 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
+import { 
+  Search, 
+  Palette, 
+  BarChart3, 
+  Users, 
+  Bot, 
+  MessageSquare 
+} from 'lucide-react';
 
 const features = [
   {
-    icon: '🔍',
+    icon: Search,
     title: 'AI-Powered Profile Analysis',
     description: 'Connects to GitHub and resume to perform comprehensive analysis of technical skills, most active languages, and project quality.',
     gradient: 'from-cyan-500/20 to-teal-500/20',
     glowColor: 'shadow-cyan-500/25',
   },
   {
-    icon: '🎨',
+    icon: Palette,
     title: 'Automated Portfolio Generation',
     description: 'AI generates complete, customizable, professionally designed portfolio websites with AI-written descriptions and bios.',
     gradient: 'from-teal-500/20 to-emerald-500/20',
     glowColor: 'shadow-teal-500/25',
   },
   {
-    icon: '📊',
+    icon: BarChart3,
     title: 'Code Craftsmanship Score',
     description: 'Quantifiable score based on code quality, documentation, testing practices, and project structure analysis.',
     gradient: 'from-sky-500/20 to-cyan-500/20',
     glowColor: 'shadow-sky-500/25',
   },
   {
-    icon: '�',
+    icon: Users,
     title: 'Holistic Candidate Dashboard',
     description: 'Centralized view combining resume data with in-depth GitHub analysis, showing what candidates have actually built.',
     gradient: 'from-emerald-500/20 to-teal-500/20',
     glowColor: 'shadow-emerald-500/25',
   },
   {
-    icon: '🤖',
+    icon: Bot,
     title: 'AI Candidate Summary',
     description: 'Concise AI-generated summaries highlighting core strengths, impressive projects, and potential red flags.',
     gradient: 'from-teal-500/20 to-cyan-500/20',
     glowColor: 'shadow-teal-500/25',
   },
   {
-    icon: '❓',
+    icon: MessageSquare,
     title: 'Contextual Interview Questions',
     description: 'AI creates personalized technical interview questions based on specific projects and code, not generic algorithms.',
     gradient: 'from-cyan-500/20 to-sky-500/20',
@@ -110,8 +118,8 @@ export const FeaturesSection: React.FC = () => {
                 <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                 
                 <CardHeader className="relative z-10">
-                  <div className="w-16 h-16 mb-4 rounded-2xl bg-slate-700/50 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300">
-                    {feature.icon}
+                  <div className="w-16 h-16 mb-4 rounded-2xl bg-slate-700/50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <feature.icon className="w-8 h-8 text-cyan-400" />
                   </div>
                   <CardTitle className="text-xl font-semibold text-white group-hover:text-cyan-200 transition-colors duration-300">
                     {feature.title}

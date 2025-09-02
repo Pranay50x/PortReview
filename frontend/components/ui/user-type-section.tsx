@@ -4,20 +4,32 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
 import { AnimatedButton } from './animated-button';
+import { 
+  Search, 
+  Palette, 
+  BarChart3, 
+  Rocket, 
+  Users, 
+  Bot, 
+  MessageSquare,
+  Target,
+  Code,
+  Filter
+} from 'lucide-react';
 import Link from 'next/link';
 
 const developerFeatures = [
-  { icon: '🔍', title: 'AI Profile Analysis', desc: 'Deep GitHub & resume insights' },
-  { icon: '🎨', title: 'Auto Portfolio', desc: 'AI-generated showcase' },
-  { icon: '📊', title: 'Craftsmanship Score', desc: 'Quantified code quality' },
-  { icon: '🚀', title: 'Professional Bio', desc: 'AI-written descriptions' },
+  { icon: Search, title: 'AI Profile Analysis', desc: 'Deep GitHub & resume insights' },
+  { icon: Palette, title: 'Auto Portfolio', desc: 'AI-generated showcase' },
+  { icon: BarChart3, title: 'Craftsmanship Score', desc: 'Quantified code quality' },
+  { icon: Rocket, title: 'Professional Bio', desc: 'AI-written descriptions' },
 ];
 
 const recruiterFeatures = [
-  { icon: '👥', title: 'Candidate Dashboard', desc: 'Holistic developer view' },
-  { icon: '🤖', title: 'AI Summaries', desc: 'Instant candidate insights' },
-  { icon: '❓', title: 'Smart Questions', desc: 'Contextual interviews' },
-  { icon: '🔎', title: 'Advanced Search', desc: 'Nuanced candidate filtering' },
+  { icon: Users, title: 'Candidate Dashboard', desc: 'Holistic developer view' },
+  { icon: Bot, title: 'AI Summaries', desc: 'Instant candidate insights' },
+  { icon: MessageSquare, title: 'Smart Questions', desc: 'Contextual interviews' },
+  { icon: Filter, title: 'Advanced Search', desc: 'Nuanced candidate filtering' },
 ];
 
 export const UserTypeSection: React.FC = () => {
@@ -68,11 +80,11 @@ export const UserTypeSection: React.FC = () => {
               
               <CardHeader className="relative z-10 text-center pb-6">
                 <motion.div
-                  className="text-6xl mb-4"
+                  className="mb-4 flex justify-center"
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   transition={{ duration: 0.3 }}
                 >
-                  👨‍💻
+                  <Code className="w-16 h-16 text-cyan-400" />
                 </motion.div>
                 <CardTitle className="text-3xl font-bold text-cyan-400 mb-3">
                   For Developers
@@ -91,7 +103,9 @@ export const UserTypeSection: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <div className="text-2xl mb-2">{feature.icon}</div>
+                      <div className="mb-2">
+                        <feature.icon className="w-6 h-6 text-cyan-400" />
+                      </div>
                       <div className="font-semibold text-cyan-300 text-sm">{feature.title}</div>
                       <div className="text-slate-400 text-xs">{feature.desc}</div>
                     </motion.div>
@@ -104,7 +118,8 @@ export const UserTypeSection: React.FC = () => {
                     asChild
                   >
                     <Link href="/auth/login?type=developer">
-                      🚀 Create My Portfolio
+                      <Rocket className="w-5 h-5 mr-2" />
+                      Create My Portfolio
                     </Link>
                   </AnimatedButton>
                 </div>
@@ -129,11 +144,11 @@ export const UserTypeSection: React.FC = () => {
               
               <CardHeader className="relative z-10 text-center pb-6">
                 <motion.div
-                  className="text-6xl mb-4"
+                  className="mb-4 flex justify-center"
                   whileHover={{ scale: 1.1, rotate: -5 }}
                   transition={{ duration: 0.3 }}
                 >
-                  🎯
+                  <Target className="w-16 h-16 text-emerald-400" />
                 </motion.div>
                 <CardTitle className="text-3xl font-bold text-emerald-400 mb-3">
                   For Recruiters
@@ -152,7 +167,9 @@ export const UserTypeSection: React.FC = () => {
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <div className="text-2xl mb-2">{feature.icon}</div>
+                      <div className="mb-2">
+                        <feature.icon className="w-6 h-6 text-emerald-400" />
+                      </div>
                       <div className="font-semibold text-emerald-300 text-sm">{feature.title}</div>
                       <div className="text-slate-400 text-xs">{feature.desc}</div>
                     </motion.div>
@@ -165,7 +182,8 @@ export const UserTypeSection: React.FC = () => {
                     asChild
                   >
                     <Link href="/auth/login?type=recruiter">
-                      🔍 Start Smart Recruiting
+                      <Search className="w-5 h-5 mr-2" />
+                      Start Smart Recruiting
                     </Link>
                   </AnimatedButton>
                 </div>
