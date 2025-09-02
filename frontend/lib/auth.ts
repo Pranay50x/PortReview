@@ -1,26 +1,183 @@
-// Simple authentication utilities
-// In a real app, you'd use a proper auth service like NextAuth.js
-
+// Frontend authentication system with GitHub OAuth
 export interface User {
   id: string;
   name: string;
   email: string;
-  type: 'developer' | 'recruiter';
-  githubUsername?: string;
+  user_type: 'developer' | 'recruiter';
+  github_username?: string;
+  avatar_url?: string;
   company?: string;
   position?: string;
-  avatarUrl?: string;
 }
 
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
+export interface AuthResult {
+  success: boolean;
+  user?: User;
+  error?: string;
 }
 
-// Mock user database (in real app, this would be in a database)
-const mockUsers: User[] = [];
+class AuthService {
+  private storageKey = 'auth_user';
+  private tokenKey = 'auth_token';
 
-// Password validation rules
+  // GitHub OAuth
+  redirectToGitHub(userType: 'developer' | 'recruiter') {
+    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
+    const redirectUri = 'http://localhost:3000/auth/callback';
+    const scope = 'read:user user:email';
+    
+    // Store user type for after OAuth
+    localStorage.setItem('auth_user_type', userType);
+    
+    const githubURL = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+    window.location.href = githubURL;
+  }
+
+  async handleGitHubCallback(code: string): Promise<AuthResult> {
+    try {
+      const userType = localStorage.getItem('auth_user_type') || 'developer';
+      console.log('GitHub callback - userType from localStorage:', userType);
+      
+      // Exchange code for access token
+      const tokenResponse = await fetch('/api/auth/github/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error('Failed to exchange code for token');
+      }
+
+      const { access_token } = await tokenResponse.json();
+      console.log('Got access token:', access_token ? 'Yes' : 'No');
+
+      // Get user data from GitHub
+      const userResponse = await fetch('https://api.github.com/user', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const githubUser = await userResponse.json();
+      console.log('GitHub user data:', githubUser);
+
+      // Get user email
+      const emailResponse = await fetch('https://api.github.com/user/emails', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+
+      const emails = await emailResponse.json();
+      const primaryEmail = emails.find((email: any) => email.primary)?.email || githubUser.email;
+
+      // Create user object
+      const user: User = {
+        id: githubUser.id.toString(),
+        name: githubUser.name || githubUser.login,
+        email: primaryEmail,
+        user_type: userType as 'developer' | 'recruiter',
+        github_username: githubUser.login,
+        avatar_url: githubUser.avatar_url,
+        company: githubUser.company,
+        position: githubUser.bio,
+      };
+
+      console.log('Created user object:', user);
+
+      // Store user data
+      localStorage.setItem(this.storageKey, JSON.stringify(user));
+      localStorage.setItem(this.tokenKey, access_token);
+      localStorage.removeItem('auth_user_type');
+
+      console.log('User stored in localStorage');
+      return { success: true, user };
+    } catch (error) {
+      console.error('GitHub OAuth error:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  // Manual authentication
+  async signUp(userData: {
+    name: string;
+    email: string;
+    password: string;
+    user_type: 'developer' | 'recruiter';
+    github_username?: string;
+    company?: string;
+  }): Promise<AuthResult> {
+    try {
+      // Create user with manual signup
+      const user: User = {
+        id: Date.now().toString(),
+        name: userData.name,
+        email: userData.email,
+        user_type: userData.user_type,
+        github_username: userData.github_username,
+        company: userData.company,
+      };
+
+      // Store user data
+      localStorage.setItem(this.storageKey, JSON.stringify(user));
+      
+      return { success: true, user };
+    } catch (error) {
+      return { success: false, error: 'Registration failed' };
+    }
+  }
+
+  async signIn(email: string, password: string): Promise<AuthResult> {
+    try {
+      // For demo purposes, check if user exists in localStorage
+      // In production, this would authenticate with your backend
+      const storedUser = localStorage.getItem(this.storageKey);
+      
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        return { success: true, user };
+      }
+
+      return { success: false, error: 'Invalid credentials' };
+    } catch (error) {
+      return { success: false, error: 'Login failed' };
+    }
+  }
+
+  signOut(): void {
+    localStorage.removeItem(this.storageKey);
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem('auth_user_type');
+  }
+
+  getCurrentUser(): User | null {
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  isAuthenticated(): boolean {
+    return this.getCurrentUser() !== null;
+  }
+}
+
+export const authService = new AuthService();
+
+// Backward compatibility exports
+export const getCurrentUser = () => authService.getCurrentUser();
+export const signOut = () => authService.signOut();
+export const isAuthenticated = () => authService.isAuthenticated();
+
+// Validation functions
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 export const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
@@ -50,141 +207,14 @@ export const validatePassword = (password: string): { isValid: boolean; errors: 
   };
 };
 
-// Email validation
-export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-// Check if email already exists
-export const emailExists = (email: string): boolean => {
-  return mockUsers.some(user => user.email.toLowerCase() === email.toLowerCase());
-};
-
-// Sign up function
-export const signUp = async (
-  name: string, 
-  email: string, 
-  password: string, 
+// Direct auth functions for compatibility
+export const signUp = (
+  name: string,
+  email: string,
+  password: string,
   userType: 'developer' | 'recruiter',
   githubUsername?: string,
   company?: string
-): Promise<{ success: boolean; error?: string; user?: User }> => {
-  
-  // Validate email
-  if (!validateEmail(email)) {
-    return { success: false, error: 'Invalid email format' };
-  }
-  
-  // Check if email already exists
-  if (emailExists(email)) {
-    return { success: false, error: 'Email already exists' };
-  }
-  
-  // Validate password
-  const passwordValidation = validatePassword(password);
-  if (!passwordValidation.isValid) {
-    return { success: false, error: passwordValidation.errors.join('. ') };
-  }
-  
-  // Create new user
-  const newUser: User = {
-    id: Date.now().toString(),
-    name,
-    email,
-    type: userType,
-    githubUsername: userType === 'developer' ? githubUsername : undefined,
-    company: userType === 'recruiter' ? company : undefined,
-    avatarUrl: `https://avatars.githubusercontent.com/u/${Math.floor(Math.random() * 1000)}?v=4`
-  };
-  
-  // Add to mock database
-  mockUsers.push(newUser);
-  
-  // Store in localStorage (in real app, use proper session management)
-  localStorage.setItem('auth_user', JSON.stringify(newUser));
-  
-  return { success: true, user: newUser };
-};
+) => authService.signUp({ name, email, password, user_type: userType, github_username: githubUsername, company });
 
-// Sign in function
-export const signIn = async (
-  email: string, 
-  password: string
-): Promise<{ success: boolean; error?: string; user?: User }> => {
-  
-  // Find user by email
-  const user = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-  
-  if (!user) {
-    return { success: false, error: 'Invalid email or password' };
-  }
-  
-  // In real app, you'd verify the password hash
-  // For demo purposes, we'll accept any password for existing users
-  
-  // Store in localStorage
-  localStorage.setItem('auth_user', JSON.stringify(user));
-  
-  return { success: true, user };
-};
-
-// Sign out function
-export const signOut = (): void => {
-  localStorage.removeItem('auth_user');
-};
-
-// Get current user
-export const getCurrentUser = (): User | null => {
-  if (typeof window === 'undefined') return null;
-  
-  const userStr = localStorage.getItem('auth_user');
-  if (!userStr) return null;
-  
-  try {
-    return JSON.parse(userStr);
-  } catch {
-    return null;
-  }
-};
-
-// Check if user is authenticated
-export const isAuthenticated = (): boolean => {
-  return getCurrentUser() !== null;
-};
-
-// GitHub OAuth simulation (in real app, use proper OAuth)
-export const signInWithGitHub = async (
-  userType: 'developer' | 'recruiter'
-): Promise<{ success: boolean; error?: string; user?: User }> => {
-  
-  // Simulate GitHub user data
-  const githubUser = {
-    name: 'GitHub User',
-    email: 'github.user@example.com',
-    githubUsername: 'githubuser',
-    avatarUrl: 'https://avatars.githubusercontent.com/u/1?v=4'
-  };
-  
-  // Check if user already exists
-  let user = mockUsers.find(u => u.email === githubUser.email);
-  
-  if (!user) {
-    // Create new user
-    user = {
-      id: Date.now().toString(),
-      name: githubUser.name,
-      email: githubUser.email,
-      type: userType,
-      githubUsername: githubUser.githubUsername,
-      avatarUrl: githubUser.avatarUrl
-    };
-    
-    mockUsers.push(user);
-  }
-  
-  // Store in localStorage
-  localStorage.setItem('auth_user', JSON.stringify(user));
-  
-  return { success: true, user };
-};
+export const signIn = (email: string, password: string) => authService.signIn(email, password);

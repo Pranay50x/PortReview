@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, portfolios, users, search
+from app.routers import auth, github_ai
 from app.core.database import init_db
 from app.core.config import settings
 
 app = FastAPI(
     title="PortReviewer API",
-    description="AI-powered technical recruiting platform that analyzes GitHub profiles and generates portfolios",
+    description="AI-powered portfolio analysis with authentication",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -15,21 +15,20 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.backend_cors_origins,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["authentication"])
-app.include_router(users.router, prefix="/api/users", tags=["users"])
-app.include_router(portfolios.router, prefix="/api/portfolios", tags=["portfolios"])
-app.include_router(search.router, prefix="/api/search", tags=["search"])
+app.include_router(github_ai.router, prefix="/api/github", tags=["github-ai"])
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database and connections on startup."""
+    """Initialize database and services on startup."""
     await init_db()
     print("🚀 PortReviewer API started successfully!")
 
@@ -45,7 +44,8 @@ async def root():
         "message": "PortReviewer API is running",
         "version": "1.0.0",
         "docs": "/docs",
-        "status": "healthy"
+        "status": "healthy",
+        "features": ["Authentication", "GitHub Analysis", "AI Insights"]
     }
 
 @app.get("/health", tags=["health"])

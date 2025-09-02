@@ -27,9 +27,9 @@ export default function AuthGuard({ children, requiredUserType }: AuthGuardProps
         return;
       }
 
-      if (requiredUserType && currentUser.type !== requiredUserType) {
+      if (requiredUserType && currentUser.user_type !== requiredUserType) {
         // Redirect to correct dashboard
-        router.push(`/dashboard/${currentUser.type}`);
+        router.push(`/dashboard/${currentUser.user_type}`);
         return;
       }
 

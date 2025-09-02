@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { Github, Twitter, Linkedin, MessageCircle, Heart } from 'lucide-react';
 
 export const ProfessionalFooter: React.FC = () => {
   const footerLinks = {
@@ -65,22 +66,25 @@ export const ProfessionalFooter: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
             >
-              {['GitHub', 'Twitter', 'LinkedIn', 'Discord'].map((social, index) => (
-                <motion.a
-                  key={social}
-                  href={`#${social.toLowerCase()}`}
-                  className="w-10 h-10 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300"
-                  whileHover={{ scale: 1.1, y: -2 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <span className="text-lg">
-                    {social === 'GitHub' && '🐙'}
-                    {social === 'Twitter' && '🐦'}
-                    {social === 'LinkedIn' && '💼'}
-                    {social === 'Discord' && '💬'}
-                  </span>
-                </motion.a>
-              ))}
+              {[
+                { name: 'GitHub', icon: Github },
+                { name: 'Twitter', icon: Twitter },
+                { name: 'LinkedIn', icon: Linkedin },
+                { name: 'Discord', icon: MessageCircle }
+              ].map((social, index) => {
+                const IconComponent = social.icon;
+                return (
+                  <motion.a
+                    key={social.name}
+                    href={`#${social.name.toLowerCase()}`}
+                    className="w-10 h-10 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg flex items-center justify-center text-slate-400 hover:text-white transition-all duration-300"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <IconComponent className="w-5 h-5" />
+                  </motion.a>
+                );
+              })}
             </motion.div>
           </div>
 
@@ -125,8 +129,8 @@ export const ProfessionalFooter: React.FC = () => {
           transition={{ duration: 0.6, delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <p className="text-slate-400 text-sm mb-4 md:mb-0">
-            © 2025 PortReviewer. All rights reserved. Built with ❤️ for developers.
+          <p className="text-slate-400 text-sm mb-4 md:mb-0 flex items-center gap-2">
+            © 2025 PortReviewer. All rights reserved. Built with <Heart className="w-4 h-4 text-red-500" /> for developers.
           </p>
           
           <div className="flex items-center space-x-6 text-sm text-slate-400">

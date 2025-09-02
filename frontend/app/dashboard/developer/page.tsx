@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, Bot, TrendingUp, Search, Link as LinkIcon, BarChart3 } from 'lucide-react';
 import AuthGuard from '@/components/AuthGuard';
-import { getCurrentUser, signOut, type User } from '@/lib/auth';
+import { PortfolioAnalytics } from '@/components/PortfolioAnalytics';
+import { getCurrentUser, signOut, User } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
 function DeveloperDashboardContent() {
@@ -130,7 +131,7 @@ function DeveloperDashboardContent() {
                 Sign Out
               </Button>
               <Avatar className="border-2 border-cyan-500/30">
-                <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+                <AvatarImage src={user?.avatar_url} alt={user?.name} />
                 <AvatarFallback className="bg-slate-800 text-cyan-400">
                   {user?.name?.split(' ').map((n: string) => n[0]).join('')}
                 </AvatarFallback>
@@ -266,52 +267,8 @@ function DeveloperDashboardContent() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* AI Insights */}
-            <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-white">
-                  <Bot className="w-5 h-5 text-cyan-400" />
-                  AI Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-green-400 mb-2">Strengths</h4>
-                  <ul className="text-sm space-y-1">
-                    {portfolio?.aiInsights.strengthAreas.map((area: string, index: number) => (
-                      <li key={index} className="flex items-center gap-2 text-slate-300">
-                        <span className="text-green-400">✓</span>
-                        {area}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold text-orange-400 mb-2">Growth Areas</h4>
-                  <ul className="text-sm space-y-1">
-                    {portfolio?.aiInsights.improvementAreas.map((area: string, index: number) => (
-                      <li key={index} className="flex items-center gap-2 text-slate-300">
-                        <TrendingUp className="w-4 h-4 text-orange-400" />
-                        {area}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-blue-400 mb-2">Career Suggestions</h4>
-                  <ul className="text-sm space-y-1">
-                    {portfolio?.aiInsights.careerSuggestions.map((suggestion: string, index: number) => (
-                      <li key={index} className="flex items-center gap-2 text-slate-300">
-                        <span className="text-blue-400">💼</span>
-                        {suggestion}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+            {/* AI Portfolio Analytics */}
+            <PortfolioAnalytics githubUsername={user?.github_username} />
 
             {/* Quick Actions */}
             <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">

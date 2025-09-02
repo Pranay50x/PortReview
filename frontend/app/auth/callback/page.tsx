@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock, CheckCircle, XCircle } from 'lucide-react';
+import { authService } from '@/lib/auth';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -30,42 +32,26 @@ export default function AuthCallback() {
         }
 
         // Get user type from localStorage
-        const userType = localStorage.getItem('auth_user_type') || 'developer';
+        const userType = (localStorage.getItem('auth_user_type') || 'developer') as 'developer' | 'recruiter';
         
-        // Send code to backend for token exchange
-        const response = await fetch('/api/auth/github/callback', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            code,
-            state,
-            userType,
-          }),
-        });
+        // Use frontend auth service for GitHub OAuth
+        const result = await authService.handleGitHubCallback(code);
 
-        const data = await response.json();
-
-        if (response.ok) {
-          // Store JWT token
-          localStorage.setItem('auth_token', data.token);
+        if (result.success && result.user) {
           localStorage.removeItem('auth_user_type');
           
           setStatus('success');
           setMessage('Login successful! Redirecting...');
           
-          // Redirect based on user type
-          setTimeout(() => {
-            if (userType === 'developer') {
-              router.push('/dashboard/developer');
-            } else {
-              router.push('/dashboard/recruiter');
-            }
-          }, 2000);
+          console.log('OAuth success, user:', result.user);
+          console.log('Redirecting to:', `/dashboard/${result.user.user_type}`);
+          
+          // Immediate redirect instead of timeout
+          router.push(`/dashboard/${result.user.user_type}`);
         } else {
+          console.error('OAuth failed:', result.error);
           setStatus('error');
-          setMessage(data.message || 'Authentication failed.');
+          setMessage(result.error || 'Authentication failed.');
         }
       } catch (error) {
         setStatus('error');
@@ -78,37 +64,37 @@ export default function AuthCallback() {
   }, [searchParams, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700/50">
         <CardHeader className="text-center">
-          <div className="text-4xl mb-4">
-            {status === 'loading' && '⏳'}
-            {status === 'success' && '✅'}
-            {status === 'error' && '❌'}
+          <div className="flex justify-center mb-4">
+            {status === 'loading' && <Clock className="w-12 h-12 text-blue-400 animate-spin" />}
+            {status === 'success' && <CheckCircle className="w-12 h-12 text-green-400" />}
+            {status === 'error' && <XCircle className="w-12 h-12 text-red-400" />}
           </div>
-          <CardTitle>
+          <CardTitle className="text-white">
             {status === 'loading' && 'Authenticating...'}
             {status === 'success' && 'Welcome to PortReviewer!'}
             {status === 'error' && 'Authentication Failed'}
           </CardTitle>
-          <CardDescription>{message}</CardDescription>
+          <CardDescription className="text-slate-300">{message}</CardDescription>
         </CardHeader>
         <CardContent className="text-center">
           {status === 'loading' && (
             <div className="animate-pulse space-y-2">
-              <div className="h-2 bg-gray-200 rounded"></div>
-              <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-2 bg-slate-600 rounded"></div>
+              <div className="h-2 bg-slate-600 rounded w-3/4"></div>
+              <div className="h-2 bg-slate-600 rounded w-1/2"></div>
             </div>
           )}
           {status === 'error' && (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-slate-400">
                 Please try logging in again, or contact support if the problem persists.
               </p>
               <button
                 onClick={() => router.push('/auth/login')}
-                className="text-blue-600 hover:underline"
+                className="text-blue-400 hover:underline"
               >
                 Return to Login
               </button>

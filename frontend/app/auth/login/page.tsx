@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Code, Target, Github, Sparkles, AlertCircle } from 'lucide-react';
-import { signIn, signInWithGitHub, signUp, validateEmail, validatePassword, isAuthenticated } from '@/lib/auth';
+import { signIn, signUp, validateEmail, validatePassword, isAuthenticated, authService } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function LoginPage() {
     // Redirect if already authenticated
     if (isAuthenticated()) {
       const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
-      router.push(`/dashboard/${user.type}`);
+      router.push(`/dashboard/${user.user_type}`);
     }
   }, [router]);
 
@@ -77,8 +77,9 @@ export default function LoginPage() {
           company
         );
 
-        if (result.success) {
-          router.push(`/dashboard/${userType}`);
+        if (result.success && result.user) {
+          console.log('Signup success, user:', result.user);
+          router.push(`/dashboard/${result.user.user_type}`);
         } else {
           setError(result.error || 'Sign up failed');
         }
@@ -87,7 +88,7 @@ export default function LoginPage() {
         const result = await signIn(email, password);
         
         if (result.success) {
-          router.push(`/dashboard/${result.user!.type}`);
+          router.push(`/dashboard/${result.user!.user_type}`);
         } else {
           setError(result.error || 'Sign in failed');
         }
@@ -104,16 +105,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await signInWithGitHub(userType!);
-      
-      if (result.success) {
-        router.push(`/dashboard/${userType}`);
-      } else {
-        setError(result.error || 'GitHub sign in failed');
+      if (!userType) {
+        setError('Please select your user type first');
+        setLoading(false);
+        return;
       }
+
+      // Use the frontend auth service to redirect to GitHub
+      authService.redirectToGitHub(userType);
     } catch (err) {
-      setError('GitHub sign in failed');
-    } finally {
+      setError('Failed to initialize GitHub authentication');
       setLoading(false);
     }
   };

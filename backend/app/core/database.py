@@ -18,8 +18,15 @@ async def get_database():
 async def init_db():
     """Initialize database connection and create indexes."""
     try:
-        # Create MongoDB client
-        db.client = AsyncIOMotorClient(settings.mongodb_url)
+        # Create MongoDB client with SSL options
+        db.client = AsyncIOMotorClient(
+            settings.mongodb_url,
+            ssl=True,
+            ssl_cert_reqs='CERT_NONE',  # For development - allows self-signed certificates
+            serverSelectionTimeoutMS=5000,  # 5 second timeout
+            connectTimeoutMS=5000,
+            socketTimeoutMS=5000
+        )
         db.database = db.client[settings.database_name]
         
         # Test connection
@@ -32,7 +39,10 @@ async def init_db():
         
     except Exception as e:
         logger.error(f"Failed to connect to MongoDB: {e}")
-        raise
+        # For development, we'll continue without MongoDB and use in-memory storage
+        logger.warning("Continuing without MongoDB - using in-memory storage for development")
+        db.client = None
+        db.database = None
 
 async def close_db():
     """Close database connection."""
