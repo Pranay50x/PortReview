@@ -6,8 +6,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Database:
-    client: Optional[AsyncIOMotorClient] = None
-    database = None
+    client: Optional[AsyncIOMotorClient]
+    database: Optional[any]
+    
+    def __init__(self):
+        self.client = None
+        self.database = None
 
 db = Database()
 
@@ -18,11 +22,9 @@ async def get_database():
 async def init_db():
     """Initialize database connection and create indexes."""
     try:
-        # Create MongoDB client with SSL options
+        # Create MongoDB client without SSL for local development
         db.client = AsyncIOMotorClient(
             settings.mongodb_url,
-            ssl=True,
-            ssl_cert_reqs='CERT_NONE',  # For development - allows self-signed certificates
             serverSelectionTimeoutMS=5000,  # 5 second timeout
             connectTimeoutMS=5000,
             socketTimeoutMS=5000

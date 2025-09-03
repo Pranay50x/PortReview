@@ -4,6 +4,10 @@ from pydantic import BaseModel
 from typing import List, Dict, Any
 from app.services.github_service import GitHubService
 from app.services.ai_service import AIService
+from app.services.cache_service import cache_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -23,8 +27,23 @@ async def options_analyze():
         }
     )
 
+@router.options("/suggestions")
+async def options_suggestions():
+    return JSONResponse(
+        content={},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
 class GitHubAnalyzeRequest(BaseModel):
     username: str
+
+class AISuggestionsRequest(BaseModel):
+    username: str
+    suggestion_type: str = "career"  # career, technical, portfolio
 
 class GitHubRepo(BaseModel):
     name: str
@@ -48,9 +67,21 @@ class GitHubAnalysisResponse(BaseModel):
 @router.post("/analyze", response_model=GitHubAnalysisResponse)
 async def analyze_github_profile(request: GitHubAnalyzeRequest):
     """
-    Analyze a GitHub profile and return AI insights
+    Analyze a GitHub profile with AI insights and caching.
+    Uses cache to avoid repeated API calls for the same user.
     """
     try:
+        username = request.username.lower()
+        
+        # Check cache first
+        cached_result = await cache_service.get_analysis_cache(username)
+        if cached_result:
+            logger.info(f"Returning cached analysis for {username}")
+            # Convert cached data to response model
+            repositories = [GitHubRepo(**repo) for repo in cached_result.get("repositories", [])]
+            ai_insights = AIInsights(**cached_result.get("ai_insights", {}))
+            return GitHubAnalysisResponse(repositories=repositories, ai_insights=ai_insights)
+        
         # Get GitHub repositories
         repos_data = await github_service.get_user_repositories(request.username)
         
@@ -103,13 +134,136 @@ async def analyze_github_profile(request: GitHubAnalyzeRequest):
             recommendations=recommendations[:3] if recommendations else ['Continue building diverse projects']
         )
         
+        # Cache the result
+        cache_data = {
+            "repositories": [repo.dict() for repo in repositories],
+            "ai_insights": ai_insights.dict()
+        }
+        await cache_service.save_analysis_cache(username, cache_data)
+        
         return GitHubAnalysisResponse(
             repositories=repositories,
             ai_insights=ai_insights
         )
         
     except Exception as e:
+        logger.error(f"Error analyzing profile {request.username}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to analyze GitHub profile: {str(e)}")
+
+@router.post("/suggestions")
+async def get_ai_suggestions(request: AISuggestionsRequest):
+    """
+    Get AI-powered suggestions for career, technical growth, or portfolio improvement.
+    """
+    try:
+        username = request.username.lower()
+        
+        # Get cached analysis or perform new analysis
+        cached_result = await cache_service.get_analysis_cache(username)
+        if not cached_result:
+            # No cached data, need fresh analysis
+            repos_data = await github_service.get_user_repositories(request.username)
+            if not repos_data:
+                raise HTTPException(status_code=404, detail=f"No repositories found for user {request.username}")
+            
+            analysis = await ai_service.analyze_profile(repos_data)
+            if "error" in analysis:
+                raise HTTPException(status_code=500, detail=f"AI analysis failed: {analysis['error']}")
+        else:
+            analysis = cached_result.get("ai_insights", {})
+            repos_data = [
+                {
+                    "name": repo["name"],
+                    "description": repo.get("description", ""),
+                    "language": repo.get("language", "")
+                }
+                for repo in cached_result.get("repositories", [])
+            ]
+        
+        if request.suggestion_type == "career":
+            # Generate career recommendations
+            suggestions = await ai_service.generate_candidate_summary({
+                "analysis": analysis,
+                "repositories": repos_data[:5]  # Top 5 repos
+            })
+            
+            return {
+                "type": "career",
+                "suggestions": suggestions.get("fit_analysis", {}),
+                "career_paths": suggestions.get("fit_analysis", {}).get("best_suited_for", [
+                    "Full-stack Developer", "Software Engineer", "Frontend Developer"
+                ]),
+                "growth_areas": suggestions.get("potential_red_flags", [
+                    "Add more testing to projects", "Improve documentation"
+                ]),
+                "summary": suggestions.get("candidate_summary", 
+                    "Developing software engineer with strong foundation in modern technologies.")
+            }
+            
+        elif request.suggestion_type == "technical":
+            # Generate technical improvement suggestions
+            craftsmanship = await ai_service.calculate_craftsmanship_score(repos_data[:10])
+            
+            return {
+                "type": "technical",
+                "current_score": craftsmanship.get("overall_score", 65.0),
+                "strengths": craftsmanship.get("strengths", [
+                    "Good project organization", "Consistent naming conventions"
+                ]),
+                "improvement_areas": craftsmanship.get("improvement_areas", [
+                    "Add unit tests", "Improve documentation", "Add CI/CD"
+                ]),
+                "recommendations": craftsmanship.get("recommendations", [
+                    "Implement testing frameworks in key projects",
+                    "Create comprehensive README files",
+                    "Add live demo links to showcase projects"
+                ]),
+                "next_steps": [
+                    "Focus on testing - add unit tests to your main projects",
+                    "Improve documentation - create detailed README files",
+                    "Code organization - follow consistent project structure",
+                    "Open source - contribute to existing projects or create reusable libraries"
+                ]
+            }
+            
+        elif request.suggestion_type == "portfolio":
+            # Generate portfolio improvement suggestions
+            portfolio_content = await ai_service.generate_portfolio_content(analysis, repos_data[:8])
+            
+            return {
+                "type": "portfolio",
+                "bio_suggestion": portfolio_content.get("bio", 
+                    "Passionate developer building innovative solutions with modern technologies."),
+                "skills_summary": portfolio_content.get("skills_summary",
+                    "Strong foundation in web development with experience in multiple programming languages."),
+                "project_highlights": portfolio_content.get("project_descriptions", {}),
+                "improvement_tips": [
+                    "Add live demo links to your projects",
+                    "Include detailed project descriptions with impact metrics",
+                    "Showcase your problem-solving approach in README files",
+                    "Add screenshots or GIFs to demonstrate functionality",
+                    "Create a personal website to host your portfolio"
+                ]
+            }
+            
+        else:
+            raise HTTPException(status_code=400, detail="Invalid suggestion_type. Use: career, technical, or portfolio")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating suggestions for {request.username}: {e}")
+        raise HTTPException(status_code=500, detail=f"Suggestion generation failed: {str(e)}")
+
+@router.delete("/cache/{username}")
+async def clear_user_cache(username: str):
+    """Clear cache for a specific user (useful for testing or forced refresh)."""
+    try:
+        success = await cache_service.clear_user_cache(username.lower())
+        return {"success": success, "message": f"Cache cleared for {username}"}
+    except Exception as e:
+        logger.error(f"Error clearing cache for {username}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to clear cache")
 
 @router.get("/user/{username}")
 async def get_github_user(username: str):
