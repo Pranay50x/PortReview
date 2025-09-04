@@ -20,6 +20,60 @@ class AuthService {
   private storageKey = 'auth_user';
   private tokenKey = 'auth_token';
 
+  // MongoDB integration
+  private async saveUserToMongoDB(user: User): Promise<void> {
+    const response = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: user.email,
+        name: user.name,
+        user_type: user.user_type,
+        github_username: user.github_username,
+        profile: {
+          bio: user.position,
+          company: user.company,
+          avatar_url: user.avatar_url,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save user to MongoDB');
+    }
+  }
+
+  private async getUserFromMongoDB(email: string): Promise<User | null> {
+    try {
+      const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
+      
+      if (response.status === 404) {
+        return null;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user from MongoDB');
+      }
+
+      const mongoUser = await response.json();
+      
+      // Convert MongoDB user to our User interface
+      return {
+        id: mongoUser.id,
+        name: mongoUser.name,
+        email: mongoUser.email,
+        user_type: mongoUser.user_type,
+        github_username: mongoUser.github_username,
+        avatar_url: mongoUser.profile?.avatar_url,
+        company: mongoUser.profile?.company,
+        position: mongoUser.profile?.bio,
+      };
+    } catch (error) {
+      console.error('Error fetching user from MongoDB:', error);
+      return null;
+    }
+  }
+
   // GitHub OAuth
   redirectToGitHub(userType: 'developer' | 'recruiter') {
     const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
@@ -86,7 +140,16 @@ class AuthService {
 
       console.log('Created user object:', user);
 
-      // Store user data
+      // Store user in MongoDB
+      try {
+        await this.saveUserToMongoDB(user);
+        console.log('User saved to MongoDB');
+      } catch (mongoError) {
+        console.error('Failed to save user to MongoDB:', mongoError);
+        // Continue with local storage as fallback
+      }
+
+      // Store user data locally
       localStorage.setItem(this.storageKey, JSON.stringify(user));
       localStorage.setItem(this.tokenKey, access_token);
       localStorage.removeItem('auth_user_type');
@@ -119,7 +182,16 @@ class AuthService {
         company: userData.company,
       };
 
-      // Store user data
+      // Store user in MongoDB
+      try {
+        await this.saveUserToMongoDB(user);
+        console.log('User saved to MongoDB during signup');
+      } catch (mongoError) {
+        console.error('Failed to save user to MongoDB during signup:', mongoError);
+        // Continue with local storage as fallback
+      }
+
+      // Store user data locally
       localStorage.setItem(this.storageKey, JSON.stringify(user));
       
       return { success: true, user };
@@ -130,12 +202,30 @@ class AuthService {
 
   async signIn(email: string, password: string): Promise<AuthResult> {
     try {
-      // For demo purposes, check if user exists in localStorage
-      // In production, this would authenticate with your backend
-      const storedUser = localStorage.getItem(this.storageKey);
+      // First, try to get user from MongoDB
+      let user = await this.getUserFromMongoDB(email);
       
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
+      if (!user) {
+        // Fallback to localStorage for existing users
+        const storedUser = localStorage.getItem(this.storageKey);
+        if (storedUser) {
+          user = JSON.parse(storedUser);
+          
+          // If we found the user in localStorage, save them to MongoDB for future use
+          if (user && user.email === email) {
+            try {
+              await this.saveUserToMongoDB(user);
+              console.log('Migrated user from localStorage to MongoDB');
+            } catch (mongoError) {
+              console.error('Failed to migrate user to MongoDB:', mongoError);
+            }
+          }
+        }
+      }
+
+      if (user) {
+        // Store user data locally for quick access
+        localStorage.setItem(this.storageKey, JSON.stringify(user));
         return { success: true, user };
       }
 

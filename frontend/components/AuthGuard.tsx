@@ -42,7 +42,7 @@ export default function AuthGuard({ children, requiredUserType }: AuthGuardProps
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-800 flex items-center justify-center">
         <div className="animate-pulse text-center">
           <div className="text-2xl text-slate-300">Checking authentication...</div>
         </div>
