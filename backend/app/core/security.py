@@ -1,13 +1,17 @@
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 from typing import Optional, Dict, Any
 import secrets
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Security setup
+security = HTTPBearer()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
@@ -39,6 +43,42 @@ def verify_token(token: str) -> Dict[str, Any]:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+
+async def get_current_active_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Dependency to get current authenticated user.
+    """
+    try:
+        payload = verify_token(credentials.credentials)
+        user_id = payload.get("user_id")
+        email = payload.get("sub")
+        
+        if not user_id or not email:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        
+        # For now, return a mock user object
+        # In production, this would fetch from database
+        from app.models.user import User
+        return User(
+            id=user_id,
+            email=email,
+            name="Current User",
+            user_type="developer",
+            is_active=True
+        )
+        
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials"
         )
 
 def generate_github_state() -> str:

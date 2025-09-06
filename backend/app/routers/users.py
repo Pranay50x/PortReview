@@ -289,3 +289,51 @@ async def get_user_following(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid user ID"
         )
+
+@router.get("/me/activity")
+async def get_current_user_activity(
+    db=Depends(get_database)
+):
+    """
+    Get current user's recent activity.
+    """
+    try:
+        # Mock activity data for now - in production this would come from activity logs
+        activities = [
+            {
+                "id": "1",
+                "type": "portfolio_view",
+                "description": "Portfolio viewed by TechCorp recruiter",
+                "timestamp": "2025-09-05T16:00:00Z",
+                "metadata": {"company": "TechCorp", "position": "Senior Developer"}
+            },
+            {
+                "id": "2", 
+                "type": "github_commit",
+                "description": "New commit pushed to portfolio-website",
+                "timestamp": "2025-09-05T11:00:00Z",
+                "metadata": {"repository": "portfolio-website", "commits": 3}
+            },
+            {
+                "id": "3",
+                "type": "ai_suggestion",
+                "description": "AI suggested improvements for your React skills",
+                "timestamp": "2025-09-04T14:00:00Z",
+                "metadata": {"skill": "React", "improvement_count": 5}
+            },
+            {
+                "id": "4",
+                "type": "profile_update",
+                "description": "Profile updated with new skills",
+                "timestamp": "2025-09-04T09:00:00Z",
+                "metadata": {"skills_added": ["Next.js", "TypeScript"]}
+            }
+        ]
+        
+        return {"activities": activities}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch activity: {str(e)}"
+        )

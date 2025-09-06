@@ -33,25 +33,31 @@ class AIService:
         except Exception as e:
             return {"error": f"Profile analysis failed: {str(e)}"}
     
-    async def generate_portfolio_content(self, profile_analysis: Dict[str, Any], repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def generate_portfolio_content(self, github_data: Dict[str, Any], repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Core Feature 2: Automated Portfolio Generation
         Generates AI-written project descriptions, bio, and portfolio content.
         """
         if not self.model:
-            return {"error": "Gemini API key not configured"}
+            return self._generate_fallback_portfolio_content(github_data, repositories)
         
         try:
-            prompt = self._create_portfolio_generation_prompt(profile_analysis, repositories)
+            prompt = self._create_portfolio_generation_prompt(github_data, repositories)
             
             loop = asyncio.get_event_loop()
             with ThreadPoolExecutor() as executor:
                 response = await loop.run_in_executor(executor, self._generate_response, prompt)
             
-            return self._parse_json_response(response.text)
+            result = self._parse_json_response(response.text)
+            
+            # Ensure we have fallback content if AI fails
+            if result.get("error"):
+                return self._generate_fallback_portfolio_content(github_data, repositories)
+            
+            return result
             
         except Exception as e:
-            return {"error": f"Portfolio generation failed: {str(e)}"}
+            return self._generate_fallback_portfolio_content(github_data, repositories)
     
     async def calculate_craftsmanship_score(self, repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -158,29 +164,43 @@ class AIService:
         }}
         """
     
-    def _create_portfolio_generation_prompt(self, profile_analysis: Dict[str, Any], repositories: List[Dict[str, Any]]) -> str:
+    def _create_portfolio_generation_prompt(self, github_data: Dict[str, Any], repositories: List[Dict[str, Any]]) -> str:
         """Create prompt for portfolio content generation."""
-        return f"""
-        Generate professional portfolio content based on this analysis and repositories.
+        user_profile = github_data.get("user_profile", {})
+        activity_stats = github_data.get("activity_stats", {})
         
-        Profile Analysis:
-        {json.dumps(profile_analysis, indent=2)}
+        return f"""
+        Generate professional portfolio content based on this GitHub profile and repositories.
+        
+        User Profile:
+        - Name: {user_profile.get('name', 'Not provided')}
+        - Bio: {user_profile.get('bio', 'Not provided')}
+        - Location: {user_profile.get('location', 'Not provided')}
+        - Company: {user_profile.get('company', 'Not provided')}
+        - Public Repos: {user_profile.get('public_repos', 0)}
+        - Followers: {user_profile.get('followers', 0)}
+        
+        Activity Stats:
+        {json.dumps(activity_stats, indent=2)}
         
         Top Repositories:
-        {json.dumps(repositories[:10], indent=2)}
+        {json.dumps(repositories[:8], indent=2)}
         
         Generate content in JSON format:
         {{
-            "bio": "<compelling 2-3 sentence professional bio>",
+            "suggested_title": "<professional portfolio title>",
+            "bio": "<compelling 2-3 sentence professional bio highlighting expertise>",
+            "professional_summary": "<2-3 paragraph summary showcasing technical skills and experience>",
             "project_descriptions": {{
-                "repo_name_1": "<engaging description highlighting impact and technical choices>",
+                "repo_name_1": "<engaging description highlighting technical choices and impact>",
                 "repo_name_2": "<another project description>"
             }},
-            "skills_summary": "<paragraph summarizing technical expertise>",
-            "professional_summary": "<2-3 paragraph summary for recruiters highlighting strengths and potential>"
+            "skills_summary": "<paragraph summarizing technical expertise and specializations>",
+            "call_to_action": "<professional closing statement for recruiters/collaborators>"
         }}
         
         Make content engaging, professional, and tailored to the developer's actual work.
+        Focus on achievements, impact, and technical expertise demonstrated through the repositories.
         """
     
     def _create_craftsmanship_scoring_prompt(self, repositories: List[Dict[str, Any]]) -> str:
@@ -314,3 +334,52 @@ class AIService:
                 "error": "Failed to parse AI response",
                 "raw_response": response_text[:500] + "..." if len(response_text) > 500 else response_text
             }
+    
+    def _generate_fallback_portfolio_content(self, github_data: Dict[str, Any], repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Generate fallback portfolio content when AI is unavailable."""
+        user_profile = github_data.get("user_profile", {})
+        activity_stats = github_data.get("activity_stats", {})
+        
+        name = user_profile.get("name") or user_profile.get("login", "Developer")
+        
+        # Generate bio
+        bio_parts = [f"I'm {name}"]
+        if user_profile.get("company"):
+            bio_parts.append(f"working at {user_profile['company']}")
+        if user_profile.get("location"):
+            bio_parts.append(f"based in {user_profile['location']}")
+        
+        languages = []
+        if activity_stats.get("top_languages"):
+            languages = [lang["language"] for lang in activity_stats["top_languages"][:3]]
+        
+        if languages:
+            bio_parts.append(f"specializing in {', '.join(languages)}")
+        
+        bio = ". ".join(bio_parts) + "."
+        
+        # Generate project descriptions for top repos
+        project_descriptions = {}
+        for repo in repositories[:5]:
+            if repo.get("description"):
+                description = repo["description"]
+                if repo.get("language"):
+                    description += f" Built with {repo['language']}."
+                if repo.get("stargazers_count", 0) > 0:
+                    description += f" ⭐ {repo['stargazers_count']} stars."
+                project_descriptions[repo["name"]] = description
+        
+        # Generate skills summary
+        skills_summary = f"Experienced developer with expertise in {', '.join(languages[:5]) if languages else 'multiple technologies'}."
+        if user_profile.get("public_repos"):
+            skills_summary += f" {user_profile['public_repos']} public repositories showcasing diverse projects."
+        
+        return {
+            "suggested_title": f"{name} - Developer Portfolio",
+            "bio": bio,
+            "professional_summary": f"{bio} With {user_profile.get('public_repos', 0)} public repositories and {user_profile.get('followers', 0)} followers, I'm passionate about creating quality software solutions.",
+            "project_descriptions": project_descriptions,
+            "skills_summary": skills_summary,
+            "call_to_action": "Let's connect and build something amazing together!",
+            "generated_by": "fallback_system"
+        }

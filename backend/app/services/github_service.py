@@ -108,8 +108,11 @@ class GitHubService:
                         "clone_url": repo.get("clone_url"),
                         "language": repo.get("language"),
                         "stargazers_count": repo.get("stargazers_count", 0),
+                        "stars": repo.get("stargazers_count", 0),  # For frontend compatibility
                         "watchers_count": repo.get("watchers_count", 0),
                         "forks_count": repo.get("forks_count", 0),
+                        "forks": repo.get("forks_count", 0),  # For frontend compatibility
+                        "url": repo.get("html_url"),  # For frontend compatibility
                         "open_issues_count": repo.get("open_issues_count", 0),
                         "size": repo.get("size", 0),
                         "topics": repo.get("topics", []),
@@ -210,6 +213,34 @@ class GitHubService:
             except httpx.HTTPError:
                 return []
     
+    async def get_user_data_public(self, username: str) -> Dict[str, Any]:
+        """
+        Get public user data without requiring authentication.
+        """
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.base_url}/users/{username}",
+                headers={"Accept": "application/vnd.github.v3+json"}
+            )
+            response.raise_for_status()
+            user_data = response.json()
+            
+            return {
+                "id": user_data.get("id"),
+                "login": user_data.get("login"),
+                "name": user_data.get("name"),
+                "avatar_url": user_data.get("avatar_url"),
+                "bio": user_data.get("bio"),
+                "company": user_data.get("company"),
+                "location": user_data.get("location"),
+                "blog": user_data.get("blog"),
+                "public_repos": user_data.get("public_repos", 0),
+                "followers": user_data.get("followers", 0),
+                "following": user_data.get("following", 0),
+                "created_at": user_data.get("created_at"),
+                "updated_at": user_data.get("updated_at")
+            }
+
     async def get_user_activity_stats(self, username: str) -> Dict[str, Any]:
         """
         Get user's GitHub activity statistics.
@@ -229,8 +260,8 @@ class GitHubService:
         top_languages = sorted(languages.items(), key=lambda x: x[1], reverse=True)[:5]
         
         # Recent activity (repositories updated in last 6 months)
-        from datetime import datetime, timedelta
-        six_months_ago = datetime.now() - timedelta(days=180)
+        from datetime import datetime, timedelta, timezone
+        six_months_ago = datetime.now(timezone.utc) - timedelta(days=180)
         
         recent_repos = []
         for repo in repos:

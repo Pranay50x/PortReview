@@ -151,23 +151,45 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
             <div className="space-y-6">
               {/* Code Quality Score */}
               <div className="text-center">
-                <div className="text-3xl font-bold text-white mb-2">
-                  {analysis.code_quality_score}%
+                <div className="text-6xl font-bold text-white mb-2">
+                  {analysis.code_quality_score || 0}%
                 </div>
-                <div className={`text-lg font-medium ${getQualityColor(analysis.code_quality_score)}`}>
-                  {getQualityLabel(analysis.code_quality_score)} Code Quality
+                <div className={`text-xl font-medium ${getQualityColor(analysis.code_quality_score || 0)}`}>
+                  {getQualityLabel(analysis.code_quality_score || 0)} Code Quality
                 </div>
                 <Progress 
-                  value={analysis.code_quality_score} 
-                  className="mt-4 bg-slate-700"
+                  value={analysis.code_quality_score || 0} 
+                  className="mt-4 bg-slate-700 h-3"
                 />
+                <p className="text-slate-400 text-sm mt-2">
+                  Based on code complexity, documentation, and best practices
+                </p>
               </div>
 
               {/* Experience Level */}
-              <div className="text-center">
+              <div className="text-center space-y-4">
                 <Badge variant="secondary" className="text-lg px-4 py-2 bg-purple-900/50 text-purple-300 border-purple-700/50">
                   {analysis.experience_level} Developer
                 </Badge>
+                
+                {/* View Portfolio Button */}
+                <div className="flex justify-center gap-4">
+                  <Button 
+                    onClick={() => window.open(`/portfolio/${githubUsername}`, '_blank')}
+                    className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-6 py-2"
+                  >
+                    <Code className="w-4 h-4 mr-2" />
+                    View Portfolio
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open(`https://github.com/${githubUsername}`, '_blank')}
+                    className="border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700"
+                  >
+                    <GitBranch className="w-4 h-4 mr-2" />
+                    GitHub Profile
+                  </Button>
+                </div>
               </div>
 
               {/* Technical Skills */}

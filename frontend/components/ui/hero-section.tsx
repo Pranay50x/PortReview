@@ -57,7 +57,7 @@ export const HeroSection: React.FC = () => {
         </motion.div>
 
         <motion.h1
-          className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight px-4"
           variants={itemVariants}
         >
           <span className="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
@@ -70,7 +70,7 @@ export const HeroSection: React.FC = () => {
         </motion.h1>
 
         <motion.p
-          className="text-xl md:text-2xl text-slate-300 mb-12 max-w-4xl mx-auto leading-relaxed"
+          className="text-lg sm:text-xl md:text-2xl text-slate-300 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed px-4"
           variants={itemVariants}
         >
           PortReviewer analyzes GitHub profiles and resumes with{' '}
@@ -80,16 +80,16 @@ export const HeroSection: React.FC = () => {
         </motion.p>
 
         <motion.div
-          className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+          className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4"
           variants={itemVariants}
         >
           <AnimatedButton
             size="lg"
-            className="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white px-8 py-4 text-lg font-semibold min-w-[200px]"
+            className="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto min-w-[200px]"
             asChild
           >
             <Link href="/auth/login?type=developer">
-              <Code className="w-5 h-5 mr-2" />
+              <Code className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Create Portfolio
             </Link>
           </AnimatedButton>
@@ -97,18 +97,18 @@ export const HeroSection: React.FC = () => {
           <AnimatedButton
             size="lg"
             variant="outline"
-            className="border-slate-600 text-slate-200 hover:bg-slate-800/50 px-8 py-4 text-lg font-semibold min-w-[200px]"
+            className="border-slate-600 text-slate-200 hover:bg-slate-800/50 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold w-full sm:w-auto min-w-[200px]"
             asChild
           >
             <Link href="/auth/login?type=recruiter">
-              <Target className="w-5 h-5 mr-2" />
+              <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Start Recruiting
             </Link>
           </AnimatedButton>
         </motion.div>
 
         <motion.div
-          className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto"
+          className="mt-12 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 max-w-3xl mx-auto px-4"
           variants={itemVariants}
         >
           {[
@@ -118,10 +118,10 @@ export const HeroSection: React.FC = () => {
             { number: '92%', label: 'Hiring Success', color: 'text-sky-400' },
           ].map((stat, index) => (
             <div key={index} className="text-center group">
-              <div className={`text-3xl md:text-4xl font-bold ${stat.color} mb-2 group-hover:scale-110 transition-transform duration-300`}>
+              <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${stat.color} mb-1 sm:mb-2 group-hover:scale-110 transition-transform duration-300`}>
                 {stat.number}
               </div>
-              <div className="text-slate-400 text-sm uppercase tracking-wider">
+              <div className="text-slate-400 text-xs sm:text-sm uppercase tracking-wider">
                 {stat.label}
               </div>
             </div>

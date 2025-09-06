@@ -90,44 +90,49 @@ function SharePortfolioContent() {
       <header className="relative z-10 bg-slate-900/80 backdrop-blur-sm border-b border-slate-700/50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => router.back()} className="text-slate-300 hover:text-cyan-400">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Button variant="ghost" onClick={() => router.back()} className="text-slate-300 hover:text-cyan-400 text-sm sm:text-base">
+                <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Back</span>
               </Button>
               <div>
-                <Link href="/" className="text-xl font-bold text-cyan-400">
+                <Link href="/" className="text-lg sm:text-xl font-bold text-cyan-400">
                   PortReviewer
                 </Link>
-                <Badge variant="secondary" className="ml-2 bg-cyan-900/50 text-cyan-300 border-cyan-700/50">
+                <Badge variant="secondary" className="ml-2 bg-cyan-900/50 text-cyan-300 border-cyan-700/50 text-xs">
                   Share
                 </Badge>
               </div>
             </div>
-            <Avatar className="border-2 border-cyan-500/30">
-              <AvatarImage src={user.avatar_url} alt={user.name} />
-              <AvatarFallback className="bg-slate-800 text-cyan-400">
-                {user.name?.split(' ').map((n: string) => n[0]).join('')}
-              </AvatarFallback>
-            </Avatar>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button className="bg-cyan-600 hover:bg-cyan-500 text-white transition-all hover:scale-105 text-sm sm:text-base" asChild>
+                <Link href="/dashboard/developer">Dashboard</Link>
+              </Button>
+              <Avatar className="border-2 border-cyan-500/30 w-8 h-8 sm:w-10 sm:h-10">
+                <AvatarImage src={user.avatar_url} alt={user.name} />
+                <AvatarFallback className="bg-slate-800 text-cyan-400 text-sm">
+                  {user.name?.split(' ').map((n: string) => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4">
+      <main className="relative z-10 max-w-4xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 sm:mb-4">
             <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
               Share Your Portfolio
             </span>
           </h1>
-          <p className="text-slate-300 text-lg">
+          <p className="text-slate-300 text-base sm:text-lg">
             Let others discover your skills and projects
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {/* Portfolio Preview */}
           <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
             <CardHeader>
@@ -171,9 +176,10 @@ function SharePortfolioContent() {
               </div>
 
               <div className="text-center">
-                <Button className="bg-cyan-600 hover:bg-cyan-500 text-white" asChild>
+                <Button className="bg-cyan-600 hover:bg-cyan-500 text-white text-sm sm:text-base" asChild>
                   <Link href={`/portfolio/${user.github_username}`} target="_blank">
-                    View Live Portfolio
+                    <span className="hidden sm:inline">View Live Portfolio</span>
+                    <span className="sm:hidden">View Portfolio</span>
                   </Link>
                 </Button>
               </div>
@@ -232,27 +238,30 @@ function SharePortfolioContent() {
               <CardContent className="space-y-3">
                 <Button
                   onClick={shareOnTwitter}
-                  className="w-full bg-blue-500 hover:bg-blue-400 text-white transition-all hover:scale-105"
+                  className="w-full bg-blue-500 hover:bg-blue-400 text-white transition-all hover:scale-105 text-sm sm:text-base"
                 >
                   <Twitter className="w-4 h-4 mr-2" />
-                  Share on Twitter
+                  <span className="hidden sm:inline">Share on Twitter</span>
+                  <span className="sm:hidden">Twitter</span>
                 </Button>
                 
                 <Button
                   onClick={shareOnLinkedIn}
-                  className="w-full bg-blue-700 hover:bg-blue-600 text-white transition-all hover:scale-105"
+                  className="w-full bg-blue-700 hover:bg-blue-600 text-white transition-all hover:scale-105 text-sm sm:text-base"
                 >
                   <Linkedin className="w-4 h-4 mr-2" />
-                  Share on LinkedIn
+                  <span className="hidden sm:inline">Share on LinkedIn</span>
+                  <span className="sm:hidden">LinkedIn</span>
                 </Button>
                 
                 <Button
                   onClick={shareViaEmail}
                   variant="outline"
-                  className="w-full border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 transition-all hover:scale-105"
+                  className="w-full border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 transition-all hover:scale-105 text-sm sm:text-base"
                 >
                   <Mail className="w-4 h-4 mr-2" />
-                  Share via Email
+                  <span className="hidden sm:inline">Share via Email</span>
+                  <span className="sm:hidden">Email</span>
                 </Button>
               </CardContent>
             </Card>

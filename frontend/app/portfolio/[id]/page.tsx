@@ -86,8 +86,8 @@ export default function PortfolioView() {
       const userData = await userResponse.json();
 
       // Calculate portfolio stats
-      const totalStars = analysis.repositories.reduce((sum, repo) => sum + repo.stars, 0);
-      const totalForks = analysis.repositories.reduce((sum, repo) => sum + repo.forks, 0);
+      const totalStars = analysis.repositories.reduce((sum, repo) => sum + (repo.stars || repo.stargazers_count || 0), 0);
+      const totalForks = analysis.repositories.reduce((sum, repo) => sum + (repo.forks || repo.forks_count || 0), 0);
       
       // Calculate language distribution
       const languageCount: Record<string, number> = {};
@@ -191,15 +191,12 @@ export default function PortfolioView() {
       <header className="sticky top-0 z-10 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <nav className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
+            <Link href="/" className="text-xl sm:text-2xl font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
               PortReviewer
             </Link>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" className="text-slate-300 hover:text-cyan-400 transition-all hover:scale-105" asChild>
-                <Link href="/auth/login">Login</Link>
-              </Button>
-              <Button className="bg-cyan-600 hover:bg-cyan-500 text-white transition-all hover:scale-105" asChild>
-                <Link href="/auth/login">Get Started</Link>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Button className="bg-cyan-600 hover:bg-cyan-500 text-white transition-all hover:scale-105 text-sm sm:text-base" asChild>
+                <Link href="/dashboard/developer">Dashboard</Link>
               </Button>
             </div>
           </nav>
@@ -209,76 +206,82 @@ export default function PortfolioView() {
       {/* Main Content */}
       <main className="relative z-10 container mx-auto px-4 py-8">
         {/* Hero Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <Avatar className="h-32 w-32 mx-auto mb-6 border-4 border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300 hover:scale-110">
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in px-4 sm:px-0">
+          <Avatar className="h-24 w-24 sm:h-32 sm:w-32 mx-auto mb-4 sm:mb-6 border-4 border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300 hover:scale-110">
             <AvatarImage src={user.avatar_url} alt={user.name} />
-            <AvatarFallback className="text-4xl bg-slate-800 text-cyan-400">
+            <AvatarFallback className="text-2xl sm:text-4xl bg-slate-800 text-cyan-400">
               {user.name.split(' ').map((n: string) => n[0]).join('')}
             </AvatarFallback>
           </Avatar>
-          <h1 className="text-5xl font-bold text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-4">
             <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
               {user.name}
             </span>
           </h1>
           {user.bio && (
-            <p className="text-xl text-slate-300 mb-6 max-w-2xl mx-auto">{user.bio}</p>
+            <p className="text-lg sm:text-xl text-slate-300 mb-4 sm:mb-6 max-w-2xl mx-auto px-4">{user.bio}</p>
           )}
           
-          <div className="flex items-center justify-center gap-8 text-sm text-slate-400 mb-8 flex-wrap">
+          <div className="flex items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-slate-400 mb-6 sm:mb-8 flex-wrap px-4">
             {user.location && (
-              <span className="flex items-center gap-2 hover:text-slate-300 transition-colors">
-                <MapPin className="w-4 h-4" />
-                {user.location}
+              <span className="flex items-center gap-1 sm:gap-2 hover:text-slate-300 transition-colors">
+                <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{user.location}</span>
+                <span className="sm:hidden">{user.location.split(',')[0]}</span>
               </span>
             )}
             {user.company && (
-              <span className="flex items-center gap-2 hover:text-slate-300 transition-colors">
-                <Briefcase className="w-4 h-4" />
-                {user.company}
+              <span className="flex items-center gap-1 sm:gap-2 hover:text-slate-300 transition-colors">
+                <Briefcase className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{user.company}</span>
+                <span className="sm:hidden">{user.company.split(' ')[0]}</span>
               </span>
             )}
-            <span className="flex items-center gap-2 hover:text-slate-300 transition-colors">
-              <Calendar className="w-4 h-4" />
-              Joined {new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            <span className="flex items-center gap-1 sm:gap-2 hover:text-slate-300 transition-colors">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Joined {new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+              <span className="sm:hidden">{new Date(user.created_at).getFullYear()}</span>
             </span>
             {ai_insights && (
-              <span className="flex items-center gap-2 hover:text-green-400 transition-colors">
-                <Sparkles className="w-4 h-4" />
-                {ai_insights.code_quality_score}% Code Quality
+              <span className="flex items-center gap-1 sm:gap-2 hover:text-green-400 transition-colors">
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                {ai_insights.code_quality_score}% Quality
               </span>
             )}
           </div>
           
-          <div className="flex justify-center gap-4 flex-wrap">
-            <Button className="bg-cyan-600 hover:bg-cyan-500 text-white transition-all hover:scale-105" asChild>
+          <div className="flex justify-center gap-2 sm:gap-4 flex-wrap px-4">
+            <Button className="bg-cyan-600 hover:bg-cyan-500 text-white transition-all hover:scale-105 text-sm sm:text-base" asChild>
               <a href={`https://github.com/${user.github_username}`} target="_blank" rel="noopener noreferrer">
-                <Github className="w-4 h-4 mr-2" />
-                View GitHub Profile
+                <Github className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">View GitHub Profile</span>
+                <span className="sm:hidden">GitHub</span>
               </a>
             </Button>
             {user.blog && (
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 transition-all hover:scale-105" asChild>
+              <Button variant="outline" className="border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 transition-all hover:scale-105 text-sm sm:text-base" asChild>
                 <a href={user.blog.startsWith('http') ? user.blog : `https://${user.blog}`} target="_blank" rel="noopener noreferrer">
-                  <Globe className="w-4 h-4 mr-2" />
-                  Website
+                  <Globe className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Website</span>
+                  <span className="sm:hidden">Site</span>
                 </a>
               </Button>
             )}
             {user.email && (
-              <Button variant="outline" className="border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 transition-all hover:scale-105" asChild>
+              <Button variant="outline" className="border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 transition-all hover:scale-105 text-sm sm:text-base" asChild>
                 <a href={`mailto:${user.email}`}>
-                  <Mail className="w-4 h-4 mr-2" />
-                  Contact
+                  <Mail className="w-4 h-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Contact</span>
+                  <span className="sm:hidden">Email</span>
                 </a>
               </Button>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 sm:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="xl:col-span-3 space-y-6 sm:space-y-8">
             {/* Projects Section */}
             <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 hover:border-slate-600/50 transition-all duration-300">
               <CardHeader>
@@ -313,17 +316,17 @@ export default function PortfolioView() {
                       <div className="flex items-center gap-6 text-sm text-slate-400 mb-4">
                         <span className="flex items-center gap-1 hover:text-yellow-400 transition-colors">
                           <Star className="w-4 h-4" />
-                          {repo.stars}
+                          {repo.stars || repo.stargazers_count || 0}
                         </span>
                         <span className="flex items-center gap-1 hover:text-blue-400 transition-colors">
                           <GitFork className="w-4 h-4" />
-                          {repo.forks}
+                          {repo.forks || repo.forks_count || 0}
                         </span>
                       </div>
 
                       <div className="flex gap-3">
                         <Button size="sm" className="bg-cyan-600 hover:bg-cyan-500 text-white transition-all hover:scale-105" asChild>
-                          <a href={repo.url} target="_blank" rel="noopener noreferrer">
+                          <a href={repo.html_url || repo.url} target="_blank" rel="noopener noreferrer">
                             <Code className="w-4 h-4 mr-1" />
                             View Code
                           </a>
@@ -355,18 +358,18 @@ export default function PortfolioView() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Experience Level & Code Quality */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div className="text-center">
                       <Badge 
                         variant="secondary" 
-                        className="text-xl px-6 py-3 bg-purple-900/50 text-purple-300 border-purple-700/50 animate-pulse mb-4"
+                        className="text-lg sm:text-xl px-4 sm:px-6 py-2 sm:py-3 bg-purple-900/50 text-purple-300 border-purple-700/50 animate-pulse mb-3 sm:mb-4"
                       >
                         {ai_insights.experience_level} Developer
                       </Badge>
-                      <div className="text-3xl font-bold text-white mb-2">
+                      <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
                         {ai_insights.code_quality_score}%
                       </div>
-                      <div className="text-sm text-green-400">Code Quality Score</div>
+                      <div className="text-xs sm:text-sm text-green-400">Code Quality Score</div>
                       <Progress 
                         value={ai_insights.code_quality_score} 
                         className="mt-3 bg-slate-700"
@@ -399,7 +402,7 @@ export default function PortfolioView() {
                   </div>
 
                   {/* Strengths and Recommendations */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     {ai_insights.strengths && ai_insights.strengths.length > 0 && (
                       <div>
                         <h4 className="font-semibold text-green-400 mb-3 flex items-center gap-2">
@@ -450,21 +453,21 @@ export default function PortfolioView() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="p-3 bg-blue-900/30 border border-blue-700/50 rounded-lg hover:bg-blue-900/40 transition-colors">
-                    <div className="text-lg font-bold text-blue-400">{user.public_repos}</div>
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 text-center">
+                  <div className="p-2 sm:p-3 bg-blue-900/30 border border-blue-700/50 rounded-lg hover:bg-blue-900/40 transition-colors">
+                    <div className="text-sm sm:text-lg font-bold text-blue-400">{user.public_repos}</div>
                     <div className="text-xs text-slate-400">Repositories</div>
                   </div>
-                  <div className="p-3 bg-green-900/30 border border-green-700/50 rounded-lg hover:bg-green-900/40 transition-colors">
-                    <div className="text-lg font-bold text-green-400">{portfolio_stats.total_stars}</div>
+                  <div className="p-2 sm:p-3 bg-green-900/30 border border-green-700/50 rounded-lg hover:bg-green-900/40 transition-colors">
+                    <div className="text-sm sm:text-lg font-bold text-green-400">{portfolio_stats.total_stars}</div>
                     <div className="text-xs text-slate-400">Total Stars</div>
                   </div>
-                  <div className="p-3 bg-purple-900/30 border border-purple-700/50 rounded-lg hover:bg-purple-900/40 transition-colors">
-                    <div className="text-lg font-bold text-purple-400">{user.followers}</div>
+                  <div className="p-2 sm:p-3 bg-purple-900/30 border border-purple-700/50 rounded-lg hover:bg-purple-900/40 transition-colors">
+                    <div className="text-sm sm:text-lg font-bold text-purple-400">{user.followers}</div>
                     <div className="text-xs text-slate-400">Followers</div>
                   </div>
-                  <div className="p-3 bg-orange-900/30 border border-orange-700/50 rounded-lg hover:bg-orange-900/40 transition-colors">
-                    <div className="text-lg font-bold text-orange-400">{user.following}</div>
+                  <div className="p-2 sm:p-3 bg-orange-900/30 border border-orange-700/50 rounded-lg hover:bg-orange-900/40 transition-colors">
+                    <div className="text-sm sm:text-lg font-bold text-orange-400">{user.following}</div>
                     <div className="text-xs text-slate-400">Following</div>
                   </div>
                 </div>

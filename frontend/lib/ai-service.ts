@@ -8,8 +8,14 @@ export interface GitHubRepo {
   description: string;
   language: string;
   stars: number;
+  stargazers_count?: number;
   forks: number;
+  forks_count?: number;
   url: string;
+  html_url?: string;
+  clone_url?: string;
+  full_name?: string;
+  id?: number;
 }
 
 export interface AIInsights {
