@@ -51,9 +51,9 @@ export const HeroSection: React.FC = () => {
           className="inline-flex items-center px-4 py-2 mb-8 text-sm font-medium bg-slate-800/50 border border-slate-700/50 rounded-full backdrop-blur-sm"
           variants={itemVariants}
         >
-          <span className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse" />
+          {/* <span className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse" />
           <Rocket className="w-4 h-4 mr-2 text-cyan-400" />
-          Revolutionizing Technical Recruiting
+          Revolutionizing Technical Recruiting */}
         </motion.div>
 
         <motion.h1
@@ -73,9 +73,9 @@ export const HeroSection: React.FC = () => {
           className="text-lg sm:text-xl md:text-2xl text-slate-300 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed px-4"
           variants={itemVariants}
         >
-          PortReviewer analyzes GitHub profiles and resumes with{' '}
-          <span className="text-cyan-400 font-semibold">AI-powered insights</span>{' '}
-          to generate professional portfolios and provide{' '}
+          PortReviewer{' '}
+          <span className="text-cyan-400 font-semibold">auto-generates professional portfolios</span>{' '}
+          from GitHub alone using AI-powered insights and provides{' '}
           <span className="text-teal-400 font-semibold">data-driven candidate assessments</span> for recruiters.
         </motion.p>
 
@@ -90,7 +90,7 @@ export const HeroSection: React.FC = () => {
           >
             <Link href="/auth/login?type=developer">
               <Code className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              Create Portfolio
+              Auto-Generate Portfolio
             </Link>
           </AnimatedButton>
 

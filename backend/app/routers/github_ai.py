@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.services.github_service import GitHubService
 from app.services.ai_service import AIService
 from app.services.cache_service import cache_service
@@ -63,6 +63,7 @@ class AIInsights(BaseModel):
 class GitHubAnalysisResponse(BaseModel):
     repositories: List[GitHubRepo]
     ai_insights: AIInsights
+    user_data: Dict[str, Any]  # Added user profile data
 
 @router.post("/analyze", response_model=GitHubAnalysisResponse)
 async def analyze_github_profile(request: GitHubAnalyzeRequest):
@@ -80,18 +81,26 @@ async def analyze_github_profile(request: GitHubAnalyzeRequest):
             # Convert cached data to response model
             repositories = [GitHubRepo(**repo) for repo in cached_result.get("repositories", [])]
             ai_insights = AIInsights(**cached_result.get("ai_insights", {}))
-            return GitHubAnalysisResponse(repositories=repositories, ai_insights=ai_insights)
+            user_data = cached_result.get("user_data", {})
+            return GitHubAnalysisResponse(repositories=repositories, ai_insights=ai_insights, user_data=user_data)
         
         # Get GitHub repositories
         repos_data = await github_service.get_user_repositories(request.username)
         
+        # Get user profile data for additional stats
+        user_data = await github_service.get_user_data_public(request.username)
+        
         # Convert to our format
         repositories = []
         for repo in repos_data:
+            repo_language = repo.get('language')
+            if repo_language is None:
+                repo_language = 'Unknown'
+            
             repositories.append(GitHubRepo(
                 name=repo.get('name', ''),
                 description=repo.get('description', '') or '',
-                language=repo.get('language', '') or 'Unknown',
+                language=repo_language,
                 stars=repo.get('stargazers_count', 0),
                 forks=repo.get('forks_count', 0),
                 url=repo.get('html_url', '')
@@ -137,13 +146,15 @@ async def analyze_github_profile(request: GitHubAnalyzeRequest):
         # Cache the result
         cache_data = {
             "repositories": [repo.dict() for repo in repositories],
-            "ai_insights": ai_insights.dict()
+            "ai_insights": ai_insights.dict(),
+            "user_data": user_data
         }
         await cache_service.save_analysis_cache(username, cache_data)
         
         return GitHubAnalysisResponse(
             repositories=repositories,
-            ai_insights=ai_insights
+            ai_insights=ai_insights,
+            user_data=user_data
         )
         
     except Exception as e:

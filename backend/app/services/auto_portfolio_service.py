@@ -240,7 +240,63 @@ class AutoPortfolioService:
     ) -> Dict[str, Any]:
         """
         Create the auto-generated portfolio document.
+        Prevents duplicates by checking for existing portfolios.
         """
+        # Check for existing portfolio first - PREVENT DUPLICATES
+        existing_portfolio = await self.portfolios_collection.find_one({
+            "user_id": user_id,
+            "github_username": github_username,
+            "auto_generated": True
+        })
+        
+        if existing_portfolio:
+            # Update existing portfolio instead of creating new one
+            portfolio_content = ai_insights.get("portfolio_content", {})
+            user_profile = github_data.get("user_profile", {})
+            
+            # Generate updated title and description
+            title = (
+                portfolio_content.get("suggested_title") or 
+                f"{user_profile.get('name', github_username)}'s Portfolio" or
+                f"{github_username} - Developer Portfolio"
+            )
+            
+            description = (
+                portfolio_content.get("bio") or 
+                user_profile.get("bio") or
+                f"Showcasing the work and projects of {github_username}"
+            )
+            
+            # Extract skills from analysis
+            skills = []
+            if "profile_analysis" in ai_insights and "technical_skills" in ai_insights["profile_analysis"]:
+                skills = list(ai_insights["profile_analysis"]["technical_skills"].keys())
+            elif "activity_stats" in github_data and "top_languages" in github_data["activity_stats"]:
+                skills = [lang["language"] for lang in github_data["activity_stats"]["top_languages"][:10]]
+            
+            # Update existing portfolio
+            update_doc = {
+                "$set": {
+                    "title": title,
+                    "description": description,
+                    "skills": skills,
+                    "github_data": github_data,
+                    "ai_insights": ai_insights,
+                    "updated_at": datetime.now(timezone.utc),
+                    "last_github_sync": datetime.now(timezone.utc)
+                }
+            }
+            
+            await self.portfolios_collection.update_one(
+                {"_id": existing_portfolio["_id"]}, 
+                update_doc
+            )
+            
+            existing_portfolio.update(update_doc["$set"])
+            existing_portfolio["id"] = str(existing_portfolio["_id"])
+            return existing_portfolio
+        
+        # Create new portfolio if none exists
         user_profile = github_data.get("user_profile", {})
         portfolio_content = ai_insights.get("portfolio_content", {})
         

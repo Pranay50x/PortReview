@@ -428,6 +428,36 @@ async def get_user_repositories(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch repositories: {str(e)}")
 
+@router.get("/user/{username}")
+async def get_github_user_data(username: str):
+    """
+    Get real GitHub user data directly from GitHub API.
+    """
+    try:
+        github_service = GitHubService()
+        
+        # Fetch real user data from GitHub API
+        user_data = await github_service.get_user_data_public(username)
+        
+        # Calculate years active
+        from datetime import datetime
+        created_date = datetime.fromisoformat(user_data["created_at"].replace("Z", "+00:00"))
+        years_active = max(1, (datetime.now().replace(tzinfo=created_date.tzinfo) - created_date).days // 365)
+        
+        # Add calculated fields
+        user_data["years_active"] = years_active
+        
+        return user_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Log the full error for debugging
+        import traceback
+        print(f"Error in get_github_user_data: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch user data: {str(e)}")
+
 @router.get("/activity/{username}")
 async def get_user_activity(
     username: str,

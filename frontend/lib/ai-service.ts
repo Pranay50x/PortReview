@@ -75,7 +75,7 @@ class AIService {
     repositories: GitHubRepo[];
     ai_insights: AIInsights;
   }> {
-    return this.makeRequest('/api/github/analyze', {
+    return this.makeRequest('/api/github/ai/analyze', {
       method: 'POST',
       body: JSON.stringify({ username }),
     });
