@@ -1,7 +1,5 @@
 "use client";
 
-import { FloatingParticles } from "@/components/ui/floating-particles";
-import { AnimatedGridBackground } from "@/components/ui/animated-grid-background";
 import { ProfessionalNavbar } from "@/components/ui/professional-navbar";
 import { HeroSection } from "@/components/ui/hero-section";
 import { UserTypeSection } from "@/components/ui/user-type-section";
@@ -10,12 +8,11 @@ import { ProfessionalFooter } from "@/components/ui/professional-footer";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-900 text-white overflow-hidden">
-      <AnimatedGridBackground />
-      <FloatingParticles />
+    <div className="min-h-screen text-white overflow-hidden">
+      {/* All other background components have been removed */}
       <ProfessionalNavbar />
       
-      <main className="relative z-10">
+      <main >
         <HeroSection />
         <UserTypeSection />
         <FeaturesSection />
