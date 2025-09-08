@@ -43,7 +43,7 @@ export const UserTypeSection: React.FC = () => {
   };
 
   return (
-    <section className="py-24 px-6 relative overflow-hidden">
+    <section id="solutions" className="py-24 px-6 relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-800/30 to-slate-900/30" />
       
