@@ -1,0 +1,783 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Target, 
+  Search, 
+  Filter, 
+  Users, 
+  BarChart3, 
+  LogOut,
+  Brain,
+  TrendingUp,
+  Calendar,
+  MessageSquare,
+  Zap,
+  Eye,
+  Star,
+  MapPin,
+  Clock,
+  BookOpen,
+  Award,
+  Briefcase,
+  CheckCircle,
+  AlertCircle,
+  ChevronRight,
+  Sparkles,
+  FileText,
+  Settings,
+  Bell
+} from 'lucide-react';
+import AuthGuard from '@/components/AuthGuard';
+import { getCurrentUser, signOut, type User } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+import { recruitmentAI, type CandidateAnalysis, type TalentPoolInsights } from '@/lib/ai-agents';
+
+function RecruiterDashboardContent() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [aiInsights, setAiInsights] = useState<TalentPoolInsights | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      loadInitialData();
+    }
+  }, []);
+
+  const loadInitialData = async () => {
+    // Generate enhanced mock candidates with more data
+    const mockCandidates = [
+      {
+        id: '1',
+        name: 'Jordan Rivera',
+        githubUsername: 'jordan-rivera',
+        avatarUrl: 'https://avatars.githubusercontent.com/u/101?v=4',
+        title: 'Senior Full-Stack Engineer',
+        skills: ['React', 'Node.js', 'TypeScript', 'MongoDB', 'AWS', 'Docker'],
+        experience: '5 years',
+        codeQualityScore: 92,
+        location: 'Austin, TX',
+        lastActive: '2 hours ago',
+        matchScore: 96,
+        salary: '$120K - $150K',
+        availability: 'Actively looking',
+        githubStats: { repos: 45, followers: 234, contributions: 1200 },
+        topProjects: ['E-commerce Platform', 'Real-time Chat App', 'Data Visualization Tool'],
+        education: 'MS Computer Science - UT Austin',
+        previousRoles: ['Shopify', 'Stripe'],
+        strengths: ['System Design', 'Team Leadership', 'Problem Solving'],
+        isOnline: true
+      },
+      {
+        id: '2',
+        name: 'Alex Chen',
+        githubUsername: 'alex-chen-dev',
+        avatarUrl: 'https://avatars.githubusercontent.com/u/102?v=4',
+        title: 'Frontend Architect',
+        skills: ['Vue.js', 'React', 'JavaScript', 'CSS', 'Figma', 'GraphQL'],
+        experience: '4 years',
+        codeQualityScore: 89,
+        location: 'Seattle, WA',
+        lastActive: '1 day ago',
+        matchScore: 91,
+        salary: '$110K - $140K',
+        availability: 'Open to opportunities',
+        githubStats: { repos: 38, followers: 189, contributions: 980 },
+        topProjects: ['Component Library', 'Design System', 'Progressive Web App'],
+        education: 'BS Software Engineering - University of Washington',
+        previousRoles: ['Microsoft', 'Adobe'],
+        strengths: ['UI/UX Design', 'Performance Optimization', 'Mentoring'],
+        isOnline: false
+      },
+      {
+        id: '3',
+        name: 'Morgan Taylor',
+        githubUsername: 'morgan-taylor',
+        avatarUrl: 'https://avatars.githubusercontent.com/u/103?v=4',
+        title: 'Backend Engineer',
+        skills: ['Python', 'Django', 'PostgreSQL', 'AWS', 'Kubernetes', 'Redis'],
+        experience: '6 years',
+        codeQualityScore: 95,
+        location: 'New York, NY',
+        lastActive: '5 minutes ago',
+        matchScore: 94,
+        salary: '$130K - $160K',
+        availability: 'Actively looking',
+        githubStats: { repos: 52, followers: 312, contributions: 1450 },
+        topProjects: ['Microservices Platform', 'ML Pipeline', 'API Gateway'],
+        education: 'PhD Computer Science - MIT',
+        previousRoles: ['Google', 'Netflix'],
+        strengths: ['Architecture Design', 'Scalability', 'Data Engineering'],
+        isOnline: true
+      }
+    ];
+
+    setTimeout(async () => {
+      setCandidates(mockCandidates);
+      
+      // Generate AI insights
+      try {
+        const insights = await recruitmentAI.generateTalentPoolInsights({
+          skills: ['React', 'TypeScript', 'Node.js'],
+          experience: 'Senior',
+          location: 'Remote',
+          role: 'Full-Stack Engineer'
+        });
+        setAiInsights(insights);
+      } catch (error) {
+        console.error('Failed to load AI insights:', error);
+      }
+      
+      setLoading(false);
+    }, 1500);
+  };
+
+  const handleSignOut = () => {
+    signOut();
+    router.push('/auth/login');
+  };
+
+  const filteredCandidates = candidates.filter(candidate =>
+    candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    candidate.skills.some((skill: string) => skill.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="animate-pulse text-center">
+          <Sparkles className="w-12 h-12 text-emerald-400 mx-auto mb-4 animate-spin" />
+          <div className="text-2xl text-slate-300">Loading AI-powered insights...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Animated Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/5 rounded-full blur-3xl animate-pulse delay-2000" />
+      </div>
+
+      {/* Header */}
+      <header className="relative z-10 bg-slate-900/80 backdrop-blur-sm border-b border-slate-700/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <Link href="/" className="text-xl font-bold text-emerald-400 flex items-center gap-2">
+                <Brain className="w-6 h-6" />
+                PortReviewer AI
+              </Link>
+              <Badge variant="secondary" className="bg-emerald-900/50 text-emerald-300 border-emerald-700/50">
+                Recruiter Pro
+              </Badge>
+              <span className="text-sm text-slate-400">{user?.company}</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" className="text-slate-300 hover:text-emerald-400">
+                <Bell className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" className="text-slate-300 hover:text-emerald-400">
+                <Settings className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={handleSignOut}
+                className="text-slate-300 hover:text-red-400 flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+              <Avatar className="border-2 border-emerald-500/30">
+                <AvatarImage src={user?.avatar_url} alt={user?.name} />
+                <AvatarFallback className="bg-slate-800 text-emerald-400">
+                  {user?.name?.split(' ').map((n: string) => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative z-10 max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+            <Sparkles className="w-8 h-8 text-emerald-400" />
+            AI-Powered Talent Discovery
+          </h1>
+          <p className="text-slate-300 mt-2">
+            Find exceptional developers with advanced AI insights and predictive analytics
+          </p>
+        </div>
+
+        <Tabs value={activeTab} className="space-y-6">
+          <TabsList className="bg-slate-800 border-slate-700">
+            <TabsTrigger 
+              value="overview" 
+              className="data-[state=active]:bg-purple-600"
+              onClick={() => setActiveTab('overview')}
+            >
+              <Target className="w-4 h-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="candidates" 
+              className="data-[state=active]:bg-blue-600"
+              onClick={() => setActiveTab('candidates')}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Candidates
+            </TabsTrigger>
+            <TabsTrigger 
+              value="insights" 
+              className="data-[state=active]:bg-green-600"
+              onClick={() => setActiveTab('insights')}
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              Insights
+            </TabsTrigger>
+            <TabsTrigger 
+              value="analytics" 
+              className="data-[state=active]:bg-yellow-600"
+              onClick={() => setActiveTab('analytics')}
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger 
+              value="tools" 
+              className="data-[state=active]:bg-emerald-600"
+              onClick={() => setActiveTab('tools')}
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              AI Tools
+            </TabsTrigger>
+          </TabsList>
+
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+            {/* Enhanced Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 hover:border-emerald-500/30 transition-all">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-slate-400 flex items-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    Profiles Analyzed
+                  </CardDescription>
+                  <CardTitle className="text-2xl text-emerald-400">1,247</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-green-400 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    +34% this month
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 hover:border-blue-500/30 transition-all">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-slate-400 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    AI Matched
+                  </CardDescription>
+                  <CardTitle className="text-2xl text-blue-400">89</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-green-400 flex items-center gap-1">
+                    <Brain className="w-3 h-3" />
+                    96% accuracy
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 hover:border-purple-500/30 transition-all">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-slate-400 flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Interviews Scheduled
+                  </CardDescription>
+                  <CardTitle className="text-2xl text-purple-400">23</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-green-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    +8 this week
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 hover:border-orange-500/30 transition-all">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-slate-400 flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    Time Saved
+                  </CardDescription>
+                  <CardTitle className="text-2xl text-orange-400">127h</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm text-green-400 flex items-center gap-1">
+                    <Target className="w-3 h-3" />
+                    vs manual screening
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* AI-Powered Quick Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-emerald-400" />
+                    AI-Powered Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white justify-start" asChild>
+                    <Link href="/ai-search" className="flex items-center gap-2">
+                      <Search className="w-4 h-4" />
+                      Smart Candidate Search
+                      <ChevronRight className="w-4 h-4 ml-auto" />
+                    </Link>
+                  </Button>
+                  <Button 
+                    className="w-full border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 justify-start" 
+                    variant="outline"
+                    onClick={() => setShowJobDescriptionGenerator(true)}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Generate Job Description
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                  <Link href="/ai-tools/interview-kit">
+                    <Button 
+                      className="w-full border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 justify-start" 
+                      variant="outline"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Create Interview Kit
+                      <ChevronRight className="w-4 h-4 ml-auto" />
+                    </Button>
+                  </Link>
+                  <Button className="w-full border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 justify-start" variant="outline">
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Market Salary Analysis
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Recent AI Insights */}
+              <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    Recent AI Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-start gap-3 p-3 bg-slate-700/30 rounded-lg">
+                      <TrendingUp className="w-4 h-4 text-green-400 mt-0.5" />
+                      <div>
+                        <div className="text-slate-300 font-medium">React developers in high demand</div>
+                        <div className="text-slate-400">+42% increase in job postings this month</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-slate-700/30 rounded-lg">
+                      <AlertCircle className="w-4 h-4 text-orange-400 mt-0.5" />
+                      <div>
+                        <div className="text-slate-300 font-medium">Salary expectations rising</div>
+                        <div className="text-slate-400">Senior roles +15% above market average</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 bg-slate-700/30 rounded-lg">
+                      <Brain className="w-4 h-4 text-blue-400 mt-0.5" />
+                      <div>
+                        <div className="text-slate-300 font-medium">AI match accuracy improved</div>
+                        <div className="text-slate-400">96% success rate in candidate matching</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="candidates" className="space-y-6">
+            <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-emerald-400" />
+                  AI-Enhanced Candidate Discovery
+                </CardTitle>
+                <CardDescription className="text-slate-300">
+                  Advanced filtering with AI-powered matching and insights
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 mb-6">
+                  <Input
+                    placeholder="Search by name, skills, or use natural language..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400"
+                  />
+                  <Button variant="outline" className="flex items-center gap-2 border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700">
+                    <Filter className="w-4 h-4" />
+                    AI Filters
+                  </Button>
+                  <Button className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                    <Brain className="w-4 h-4 mr-2" />
+                    Smart Search
+                  </Button>
+                </div>
+
+                {/* Enhanced Candidate List */}
+                <div className="space-y-4">
+                  {filteredCandidates.map((candidate) => (
+                    <Card key={candidate.id} className="bg-slate-700/30 border-slate-600/50 hover:bg-slate-700/50 transition-all">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-4">
+                            <div className="relative">
+                              <Avatar className="h-16 w-16 border-2 border-slate-600">
+                                <AvatarImage src={candidate.avatarUrl} alt={candidate.name} />
+                                <AvatarFallback className="bg-slate-800 text-slate-300">
+                                  {candidate.name.split(' ').map((n: string) => n[0]).join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              {candidate.isOnline && (
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-800"></div>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="font-semibold text-lg text-white">{candidate.name}</h3>
+                                <Badge 
+                                  variant={candidate.matchScore >= 90 ? "default" : "secondary"}
+                                  className={`text-xs ${
+                                    candidate.matchScore >= 90 
+                                      ? 'bg-emerald-600 text-white' 
+                                      : candidate.matchScore >= 80
+                                      ? 'bg-blue-600 text-white'
+                                      : 'bg-slate-600 text-slate-300 border-slate-500'
+                                  }`}
+                                >
+                                  <Star className="w-3 h-3 mr-1" />
+                                  {candidate.matchScore}% AI Match
+                                </Badge>
+                                <Badge variant="outline" className="text-xs border-green-500 text-green-400">
+                                  {candidate.availability}
+                                </Badge>
+                              </div>
+                              <p className="text-slate-300 mb-2 font-medium">{candidate.title}</p>
+                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-slate-400 mb-3">
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {candidate.location}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Briefcase className="w-3 h-3" />
+                                  {candidate.experience}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Award className="w-3 h-3" />
+                                  {candidate.codeQualityScore}/100 Quality
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  Active {candidate.lastActive}
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {candidate.skills.slice(0, 5).map((skill: string, index: number) => (
+                                  <Badge key={index} variant="outline" className="text-xs border-slate-500 text-slate-300">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                                {candidate.skills.length > 5 && (
+                                  <Badge variant="outline" className="text-xs border-slate-500 text-slate-400">
+                                    +{candidate.skills.length - 5} more
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-sm text-emerald-400 font-medium">
+                                Expected: {candidate.salary}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Link href={`/ai-tools/candidate-analysis?candidate=${candidate.id}`}>
+                              <Button 
+                                size="sm" 
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                              >
+                                <Brain className="w-4 h-4 mr-2" />
+                                AI Analysis
+                              </Button>
+                            </Link>
+                            <Link href={`/ai-tools/interview-kit?candidate=${candidate.id}`}>
+                              <Button 
+                                size="sm" 
+                                className="bg-blue-600 hover:bg-blue-500 text-white"
+                              >
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Interview Kit
+                              </Button>
+                            </Link>
+                            <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700">
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Shortlist
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="insights" className="space-y-6">
+            {aiInsights && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Market Trends */}
+                <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-green-400" />
+                      Market Trends
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="text-slate-300 font-medium mb-2">Hot Skills</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {aiInsights.marketTrends.hotSkills.map((skill, index) => (
+                          <Badge key={index} className="bg-green-600 text-white">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-slate-300 font-medium mb-2">Emerging Technologies</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {aiInsights.marketTrends.emergingTechnologies.map((tech, index) => (
+                          <Badge key={index} variant="outline" className="border-purple-500 text-purple-400">
+                            {tech}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-slate-300 font-medium mb-2">Salary Growth</h4>
+                      <div className="space-y-2">
+                        {Object.entries(aiInsights.marketTrends.salaryTrends).map(([skill, growth]) => (
+                          <div key={skill} className="flex justify-between items-center">
+                            <span className="text-slate-400">{skill}</span>
+                            <span className="text-green-400">+{growth}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* AI Recommendations */}
+                <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Brain className="w-5 h-5 text-purple-400" />
+                      AI Recommendations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {aiInsights.recommendations.map((rec, index) => (
+                        <div key={index} className="flex items-start gap-3 p-3 bg-slate-700/30 rounded-lg">
+                          <Sparkles className="w-4 h-4 text-purple-400 mt-0.5" />
+                          <span className="text-slate-300 text-sm">{rec}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            {/* Hiring Analytics Dashboard */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-2 bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-blue-400" />
+                    Hiring Pipeline Analytics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12 text-slate-400">
+                    Advanced analytics chart would go here
+                    <br />
+                    <small>Integration with charting library needed</small>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Target className="w-5 h-5 text-orange-400" />
+                    Success Metrics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Interview Success Rate</span>
+                      <span className="text-green-400 font-medium">87%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Average Time to Hire</span>
+                      <span className="text-blue-400 font-medium">18 days</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Candidate Satisfaction</span>
+                      <span className="text-purple-400 font-medium">94%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">AI Accuracy</span>
+                      <span className="text-emerald-400 font-medium">96%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="tools" className="space-y-6">
+            {/* AI Tools */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-yellow-400" />
+                    AI-Powered Tools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Link href="/ai-tools/job-description">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white justify-start"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Generate Job Description
+                    </Button>
+                  </Link>
+                  <Link href="/ai-tools/interview-kit">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white justify-start"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Create Interview Questions
+                    </Button>
+                  </Link>
+                  <Link href="/ai-tools/candidate-analysis">
+                    <Button className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white justify-start">
+                      <Brain className="w-4 h-4 mr-2" />
+                      AI Candidate Analysis
+                    </Button>
+                  </Link>
+                  <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white justify-start">
+                    <Brain className="w-4 h-4 mr-2" />
+                    Predict Hiring Success
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Candidate Analysis Panel */}
+              {selectedCandidate && (
+                <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Brain className="w-5 h-5 text-emerald-400" />
+                      AI Analysis: {selectedCandidate.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {analysisLoading ? (
+                      <div className="text-center py-8">
+                        <Brain className="w-8 h-8 text-emerald-400 mx-auto mb-4 animate-pulse" />
+                        <div className="text-slate-300">Analyzing candidate...</div>
+                      </div>
+                    ) : candidateAnalysis ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                            <div className="text-2xl font-bold text-emerald-400">{candidateAnalysis.technicalScore}</div>
+                            <div className="text-xs text-slate-400">Technical Score</div>
+                          </div>
+                          <div className="text-center p-3 bg-slate-700/30 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-400">{candidateAnalysis.culturalFit}</div>
+                            <div className="text-xs text-slate-400">Cultural Fit</div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-slate-300 font-medium mb-2">Strengths</h4>
+                          <div className="space-y-1">
+                            {candidateAnalysis.strengths.map((strength, index) => (
+                              <div key={index} className="text-sm text-green-400">• {strength}</div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-slate-300 font-medium mb-2">Interview Questions</h4>
+                          <div className="space-y-1">
+                            {candidateAnalysis.interviewQuestions.slice(0, 2).map((question, index) => (
+                              <div key={index} className="text-sm text-slate-400">• {question}</div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+}
+
+export default function RecruiterDashboard() {
+  return (
+    <AuthGuard requiredUserType="recruiter">
+      <RecruiterDashboardContent />
+    </AuthGuard>
+  );
+}

@@ -1,14 +1,8 @@
-// Frontend authentication system with GitHub OAuth
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  user_type: 'developer' | 'recruiter';
-  github_username?: string;
-  avatar_url?: string;
-  company?: string;
-  position?: string;
-}
+// Unified Authentication System
+import { githubAuthService, DeveloperUser } from './auth-github';
+import { googleAuthService, RecruiterUser } from './auth-google';
+
+export type User = DeveloperUser | RecruiterUser;
 
 export interface AuthResult {
   success: boolean;
@@ -16,246 +10,112 @@ export interface AuthResult {
   error?: string;
 }
 
-class AuthService {
-  private storageKey = 'auth_user';
-  private tokenKey = 'auth_token';
-
-  // MongoDB integration
-  private async saveUserToMongoDB(user: User): Promise<void> {
-    const response = await fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: user.email,
-        name: user.name,
-        user_type: user.user_type,
-        github_username: user.github_username,
-        profile: {
-          bio: user.position,
-          company: user.company,
-          avatar_url: user.avatar_url,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to save user to MongoDB');
-    }
+class UnifiedAuthService {
+  // Check if any user is authenticated
+  isAuthenticated(): boolean {
+    return this.getCurrentUser() !== null;
   }
 
-  private async getUserFromMongoDB(email: string): Promise<User | null> {
-    try {
-      const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
-      
-      if (response.status === 404) {
-        return null;
-      }
+  // Get current user (developer or recruiter)
+  getCurrentUser(): User | null {
+    const developer = githubAuthService.getCurrentUser();
+    if (developer) return developer;
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch user from MongoDB');
-      }
+    const recruiter = googleAuthService.getCurrentUser();
+    if (recruiter) return recruiter;
 
-      const mongoUser = await response.json();
-      
-      // Convert MongoDB user to our User interface
-      return {
-        id: mongoUser.id,
-        name: mongoUser.name,
-        email: mongoUser.email,
-        user_type: mongoUser.user_type,
-        github_username: mongoUser.github_username,
-        avatar_url: mongoUser.profile?.avatar_url,
-        company: mongoUser.profile?.company,
-        position: mongoUser.profile?.bio,
-      };
-    } catch (error) {
-      console.error('Error fetching user from MongoDB:', error);
-      return null;
-    }
+    return null;
   }
 
-  // GitHub OAuth
-  redirectToGitHub(userType: 'developer' | 'recruiter') {
-    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-    const redirectUri = 'http://localhost:3000/auth/callback';
-    const scope = 'read:user user:email';
-    
-    // Store user type for after OAuth
-    localStorage.setItem('auth_user_type', userType);
-    
-    const githubURL = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
-    window.location.href = githubURL;
+  // Get user type
+  getUserType(): 'developer' | 'recruiter' | null {
+    const user = this.getCurrentUser();
+    return user?.user_type || null;
+  }
+
+  // Sign out from all services
+  signOut(): void {
+    githubAuthService.signOut();
+    googleAuthService.signOut();
+    localStorage.removeItem('auth_flow_type');
+  }
+
+  // Developer authentication
+  redirectToGitHub() {
+    return githubAuthService.redirectToGitHub();
   }
 
   async handleGitHubCallback(code: string): Promise<AuthResult> {
-    try {
-      const userType = localStorage.getItem('auth_user_type') || 'developer';
-      console.log('GitHub callback - userType from localStorage:', userType);
-      
-      // Exchange code for access token
-      const tokenResponse = await fetch('/api/auth/github/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      });
-
-      if (!tokenResponse.ok) {
-        throw new Error('Failed to exchange code for token');
-      }
-
-      const { access_token } = await tokenResponse.json();
-      console.log('Got access token:', access_token ? 'Yes' : 'No');
-
-      // Get user data from GitHub
-      const userResponse = await fetch('https://api.github.com/user', {
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
-
-      if (!userResponse.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-
-      const githubUser = await userResponse.json();
-      console.log('GitHub user data:', githubUser);
-
-      // Get user email
-      const emailResponse = await fetch('https://api.github.com/user/emails', {
-        headers: { Authorization: `Bearer ${access_token}` },
-      });
-
-      const emails = await emailResponse.json();
-      const primaryEmail = emails.find((email: any) => email.primary)?.email || githubUser.email;
-
-      // Create user object
-      const user: User = {
-        id: githubUser.id.toString(),
-        name: githubUser.name || githubUser.login,
-        email: primaryEmail,
-        user_type: userType as 'developer' | 'recruiter',
-        github_username: githubUser.login,
-        avatar_url: githubUser.avatar_url,
-        company: githubUser.company,
-        position: githubUser.bio,
-      };
-
-      console.log('Created user object:', user);
-
-      // Store user in MongoDB
-      try {
-        await this.saveUserToMongoDB(user);
-        console.log('User saved to MongoDB');
-      } catch (mongoError) {
-        console.error('Failed to save user to MongoDB:', mongoError);
-        // Continue with local storage as fallback
-      }
-
-      // Store user data locally
-      localStorage.setItem(this.storageKey, JSON.stringify(user));
-      localStorage.setItem(this.tokenKey, access_token);
-      localStorage.removeItem('auth_user_type');
-
-      console.log('User stored in localStorage');
-      return { success: true, user };
-    } catch (error) {
-      console.error('GitHub OAuth error:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-    }
+    return githubAuthService.handleGitHubCallback(code);
   }
 
-  // Manual authentication
-  async signUp(userData: {
+  // Recruiter authentication  
+  redirectToGoogle() {
+    return googleAuthService.redirectToGoogle();
+  }
+
+  async handleGoogleCallback(code: string): Promise<AuthResult> {
+    return googleAuthService.handleGoogleCallback(code);
+  }
+
+  // Get appropriate tokens
+  getAccessToken(): string | null {
+    const userType = this.getUserType();
+    if (userType === 'developer') {
+      return githubAuthService.getGitHubToken();
+    } else if (userType === 'recruiter') {
+      return googleAuthService.getGoogleToken();
+    }
+    return null;
+  }
+
+  // Manual authentication for developers (fallback)
+  async developerSignUp(userData: {
     name: string;
     email: string;
     password: string;
-    user_type: 'developer' | 'recruiter';
     github_username?: string;
     company?: string;
   }): Promise<AuthResult> {
     try {
-      // Create user with manual signup
-      const user: User = {
+      // Create developer user with manual signup
+      const user: DeveloperUser = {
         id: Date.now().toString(),
         name: userData.name,
         email: userData.email,
-        user_type: userData.user_type,
-        github_username: userData.github_username,
+        user_type: 'developer',
+        github_username: userData.github_username || '',
         company: userData.company,
       };
 
-      // Store user in MongoDB
-      try {
-        await this.saveUserToMongoDB(user);
-        console.log('User saved to MongoDB during signup');
-      } catch (mongoError) {
-        console.error('Failed to save user to MongoDB during signup:', mongoError);
-        // Continue with local storage as fallback
-      }
-
       // Store user data locally
-      localStorage.setItem(this.storageKey, JSON.stringify(user));
+      localStorage.setItem('auth_developer', JSON.stringify(user));
       
       return { success: true, user };
     } catch (error) {
-      return { success: false, error: 'Registration failed' };
+      return { success: false, error: 'Developer registration failed' };
     }
   }
 
-  async signIn(email: string, password: string): Promise<AuthResult> {
+  async developerSignIn(email: string, password: string): Promise<AuthResult> {
     try {
-      // First, try to get user from MongoDB
-      let user = await this.getUserFromMongoDB(email);
-      
-      if (!user) {
-        // Fallback to localStorage for existing users
-        const storedUser = localStorage.getItem(this.storageKey);
-        if (storedUser) {
-          user = JSON.parse(storedUser);
-          
-          // If we found the user in localStorage, save them to MongoDB for future use
-          if (user && user.email === email) {
-            try {
-              await this.saveUserToMongoDB(user);
-              console.log('Migrated user from localStorage to MongoDB');
-            } catch (mongoError) {
-              console.error('Failed to migrate user to MongoDB:', mongoError);
-            }
-          }
+      // Try to get developer from localStorage (fallback method)
+      const storedUser = localStorage.getItem('auth_developer');
+      if (storedUser) {
+        const user: DeveloperUser = JSON.parse(storedUser);
+        if (user.email === email) {
+          return { success: true, user };
         }
       }
 
-      if (user) {
-        // Store user data locally for quick access
-        localStorage.setItem(this.storageKey, JSON.stringify(user));
-        return { success: true, user };
-      }
-
-      return { success: false, error: 'Invalid credentials' };
+      return { success: false, error: 'Invalid credentials or user not found' };
     } catch (error) {
-      return { success: false, error: 'Login failed' };
+      return { success: false, error: 'Developer login failed' };
     }
-  }
-
-  signOut(): void {
-    localStorage.removeItem(this.storageKey);
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem('auth_user_type');
-  }
-
-  getCurrentUser(): User | null {
-    try {
-      const stored = localStorage.getItem(this.storageKey);
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  isAuthenticated(): boolean {
-    return this.getCurrentUser() !== null;
   }
 }
 
-export const authService = new AuthService();
+export const authService = new UnifiedAuthService();
 
 // Backward compatibility exports
 export const getCurrentUser = () => authService.getCurrentUser();
@@ -296,15 +156,3 @@ export const validatePassword = (password: string): { isValid: boolean; errors: 
     errors
   };
 };
-
-// Direct auth functions for compatibility
-export const signUp = (
-  name: string,
-  email: string,
-  password: string,
-  userType: 'developer' | 'recruiter',
-  githubUsername?: string,
-  company?: string
-) => authService.signUp({ name, email, password, user_type: userType, github_username: githubUsername, company });
-
-export const signIn = (email: string, password: string) => authService.signIn(email, password);

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import auth, users, portfolios, reviews, search, github_ai, github_stats, analytics, auto_portfolio
+from .routers import auth, users, portfolios, reviews, search, github_ai, github_stats, analytics, auto_portfolio, recruitment_ai
 from app.core.database import init_db
 from app.core.config import settings
 
@@ -32,6 +32,7 @@ app.include_router(github_ai.router, prefix="/api/github/ai", tags=["github-ai"]
 app.include_router(github_stats.router, prefix="/api/github", tags=["github-stats"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(auto_portfolio.router, tags=["auto-portfolio"])
+app.include_router(recruitment_ai.router, tags=["recruitment-ai"])
 
 @app.on_event("startup")
 async def startup_event():
