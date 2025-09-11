@@ -148,37 +148,45 @@ class LangChainRecruitmentAI:
     async def generate_talent_pool_insights(self, requirements: Dict[str, Any]) -> Dict[str, Any]:
         """Generate market insights using LangChain"""
         if not self.llm:
-            return self._fallback_market_insights()
+            return self._fallback_market_insights(requirements)
         
         try:
             prompt_template = PromptTemplate(
                 input_variables=["role", "skills", "location", "experience"],
                 template="""
                 You are a market research expert analyzing talent pool trends.
-                Provide current market insights for the following requirements:
+                Provide current market insights SPECIFICALLY for the {role} role in {location}.
 
                 Role: {role}
                 Skills: {skills}
                 Location: {location}
                 Experience Level: {experience}
 
-                Provide insights in this JSON format:
+                Important: Tailor ALL insights specifically to the {role} position. Do NOT provide generic programming insights.
+
+                For a {role} role, provide role-specific insights in this JSON format:
                 {{
-                    "hot_skills": [<currently trending skills for this role>],
-                    "emerging_technologies": [<emerging tech relevant to this role>],
+                    "hot_skills": [<trending skills SPECIFICALLY for {role}>],
+                    "emerging_technologies": [<new tech SPECIFICALLY relevant to {role} work>],
                     "salary_trends": {{
-                        "<skill1>": <percentage growth>,
-                        "<skill2>": <percentage growth>
+                        "<skill1>": <percentage growth for {role} roles>,
+                        "<skill2>": <percentage growth for {role} roles>
                     }},
                     "market_demand": {{
-                        "demand_supply_ratio": <float>,
-                        "competition_level": "<Low|Medium|High>",
-                        "hiring_difficulty": "<Easy|Moderate|Challenging>"
+                        "demand_supply_ratio": <float for {role} in {location}>,
+                        "competition_level": "<Low|Medium|High> for {role}",
+                        "hiring_difficulty": "<Easy|Moderate|Challenging> for {role}"
                     }},
-                    "recommendations": [<3-5 strategic hiring recommendations>]
+                    "recommendations": [<3-5 strategic hiring recommendations SPECIFIC to {role} hiring>]
                 }}
 
-                Base your analysis on current 2024-2025 market trends.
+                Examples:
+                - For Data Scientist: Focus on ML/AI skills, Python/R, statistical analysis, cloud platforms
+                - For UX Designer: Focus on Figma, user research, prototyping, design systems
+                - For DevOps Engineer: Focus on Kubernetes, CI/CD, cloud infrastructure, automation
+                - For Product Manager: Focus on analytics, user research, roadmapping, stakeholder management
+
+                Base your analysis on current 2024-2025 market trends SPECIFIC to {role} roles.
                 """
             )
             
@@ -205,7 +213,7 @@ class LangChainRecruitmentAI:
             
         except Exception as e:
             print(f"Market insights generation failed: {e}")
-            return self._fallback_market_insights()
+            return self._fallback_market_insights(requirements)
     
     async def create_interview_kit(self, candidate_profile: Dict[str, Any], job_requirements: Dict[str, Any]) -> Dict[str, Any]:
         """Generate interview kit using LangChain"""
@@ -423,31 +431,132 @@ class LangChainRecruitmentAI:
             "salary_range": f"${90 + technical_score}K - ${120 + technical_score}K"
         }
     
-    def _fallback_market_insights(self) -> Dict[str, Any]:
-        """Fallback market insights with current trends"""
-        return {
-            "hot_skills": ["React", "TypeScript", "Python", "AWS", "Kubernetes", "GraphQL"],
-            "emerging_technologies": ["AI/ML Integration", "Edge Computing", "WebAssembly", "Rust"],
-            "salary_trends": {
-                "React": 15.2,
-                "TypeScript": 18.5,
-                "Python": 12.3,
-                "AWS": 20.1,
-                "Kubernetes": 22.8
-            },
-            "market_demand": {
-                "demand_supply_ratio": 2.4,
-                "competition_level": "High",
-                "hiring_difficulty": "Challenging"
-            },
-            "recommendations": [
-                "Offer competitive compensation packages - market is highly competitive",
-                "Emphasize remote work flexibility to expand candidate pool",
-                "Invest in technical assessment tools for better candidate evaluation",
-                "Consider candidates with adjacent skills who can learn quickly",
-                "Highlight learning and development opportunities in job postings"
-            ]
-        }
+    def _fallback_market_insights(self, requirements: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Fallback market insights with role-specific trends"""
+        role = requirements.get('role', '').lower() if requirements else ''
+        
+        # Role-specific insights
+        if 'data scientist' in role or 'data analyst' in role or 'ml engineer' in role:
+            return {
+                "hot_skills": ["Python", "SQL", "Machine Learning", "TensorFlow", "PyTorch", "Tableau"],
+                "emerging_technologies": ["LLMs/GenAI", "MLOps", "Feature Stores", "AutoML"],
+                "salary_trends": {
+                    "Python": 18.5,
+                    "Machine Learning": 25.3,
+                    "TensorFlow": 22.1,
+                    "PyTorch": 24.7,
+                    "SQL": 15.2
+                },
+                "market_demand": {
+                    "demand_supply_ratio": 3.2,
+                    "competition_level": "Very High",
+                    "hiring_difficulty": "Challenging"
+                },
+                "recommendations": [
+                    "Emphasize AI/ML project opportunities and cutting-edge tech stack",
+                    "Offer competitive packages - data science market is extremely hot",
+                    "Look for candidates with domain expertise in your industry",
+                    "Consider remote-first hiring to access global talent pool",
+                    "Highlight learning budget and conference attendance opportunities"
+                ]
+            }
+        elif 'designer' in role or 'ux' in role or 'ui' in role:
+            return {
+                "hot_skills": ["Figma", "User Research", "Prototyping", "Design Systems", "Accessibility"],
+                "emerging_technologies": ["AI-Assisted Design", "VR/AR Design", "Voice UI", "Micro-interactions"],
+                "salary_trends": {
+                    "Figma": 20.1,
+                    "User Research": 18.5,
+                    "Design Systems": 22.3,
+                    "Prototyping": 16.7,
+                    "Accessibility": 19.8
+                },
+                "market_demand": {
+                    "demand_supply_ratio": 2.1,
+                    "competition_level": "High",
+                    "hiring_difficulty": "Moderate"
+                },
+                "recommendations": [
+                    "Showcase portfolio-worthy projects and design impact",
+                    "Offer design tool subscriptions and creative software access",
+                    "Emphasize user-centered culture and design influence on product",
+                    "Provide opportunities for design system ownership",
+                    "Highlight cross-functional collaboration opportunities"
+                ]
+            }
+        elif 'devops' in role or 'sre' in role or 'infrastructure' in role:
+            return {
+                "hot_skills": ["Kubernetes", "AWS/Azure/GCP", "Terraform", "CI/CD", "Docker", "Monitoring"],
+                "emerging_technologies": ["GitOps", "Service Mesh", "eBPF", "Platform Engineering"],
+                "salary_trends": {
+                    "Kubernetes": 28.5,
+                    "Terraform": 25.3,
+                    "AWS": 22.1,
+                    "Docker": 18.7,
+                    "CI/CD": 20.2
+                },
+                "market_demand": {
+                    "demand_supply_ratio": 4.1,
+                    "competition_level": "Very High",
+                    "hiring_difficulty": "Very Challenging"
+                },
+                "recommendations": [
+                    "Offer premium compensation - DevOps talent is extremely scarce",
+                    "Highlight modern infrastructure and cloud-native technologies",
+                    "Emphasize automation culture and infrastructure-as-code practices",
+                    "Provide on-call rotation flexibility and incident response training",
+                    "Offer platform engineering career progression opportunities"
+                ]
+            }
+        elif 'product manager' in role or 'pm' in role:
+            return {
+                "hot_skills": ["Analytics", "User Research", "Roadmapping", "Stakeholder Management", "A/B Testing"],
+                "emerging_technologies": ["AI Product Strategy", "PLG (Product-Led Growth)", "Advanced Analytics", "Customer Data Platforms"],
+                "salary_trends": {
+                    "Analytics": 19.5,
+                    "User Research": 17.3,
+                    "A/B Testing": 21.1,
+                    "Stakeholder Management": 15.7,
+                    "Roadmapping": 18.2
+                },
+                "market_demand": {
+                    "demand_supply_ratio": 2.8,
+                    "competition_level": "High",
+                    "hiring_difficulty": "Challenging"
+                },
+                "recommendations": [
+                    "Look for candidates with experience in your specific industry/domain",
+                    "Emphasize product impact and metrics-driven decision making",
+                    "Highlight cross-functional leadership opportunities",
+                    "Provide access to user research tools and analytics platforms",
+                    "Offer clear product career progression and ownership"
+                ]
+            }
+        else:
+            # Generic fallback for other roles
+            return {
+                "hot_skills": ["React", "TypeScript", "Python", "AWS", "Kubernetes", "GraphQL"],
+                "emerging_technologies": ["AI Integration", "Edge Computing", "WebAssembly", "Serverless"],
+                "salary_trends": {
+                    "React": 15.2,
+                    "TypeScript": 18.5,
+                    "Python": 12.3,
+                    "AWS": 20.1,
+                    "Kubernetes": 22.8
+                },
+                "market_demand": {
+                    "demand_supply_ratio": 2.4,
+                    "competition_level": "High",
+                    "hiring_difficulty": "Challenging"
+                },
+                "recommendations": [
+                    "Offer competitive compensation packages - market is highly competitive",
+                    "Emphasize remote work flexibility to expand candidate pool",
+                    "Invest in technical assessment tools for better candidate evaluation",
+                    "Consider candidates with adjacent skills who can learn quickly",
+                    "Highlight learning and development opportunities in job postings"
+                ]
+            }
     
     def _fallback_interview_kit(self) -> Dict[str, Any]:
         """Fallback interview kit with quality questions"""
