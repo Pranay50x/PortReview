@@ -35,7 +35,7 @@ export default function DeveloperLogin() {
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-green-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
       </div>
 
       <div className="relative z-10 w-full max-w-md">
@@ -71,7 +71,7 @@ export default function DeveloperLogin() {
                 <span className="text-slate-300">AI-powered portfolio generation</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <Users className="w-4 h-4 text-green-400" />
+                <Users className="w-4 h-4 text-purple-400" />
                 <span className="text-slate-300">Get discovered by recruiters</span>
               </div>
             </div>

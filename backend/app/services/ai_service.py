@@ -9,7 +9,7 @@ class AIService:
     def __init__(self):
         if settings.gemini_api_key:
             genai.configure(api_key=settings.gemini_api_key)
-            self.model = genai.GenerativeModel('gemini-2.0-flash-exp')  # Updated to latest model
+            self.model = genai.GenerativeModel('gemini-2.5-flash-lite')  # Updated to latest model
         else:
             self.model = None
     

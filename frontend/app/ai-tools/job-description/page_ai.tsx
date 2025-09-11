@@ -24,7 +24,6 @@ import {
   Target
 } from 'lucide-react';
 import { recruitmentAIService } from '@/lib/recruitment-ai-service';
-import { createJobDescriptionPDF } from '@/lib/pdf-utils';
 import AuthGuard from '@/components/AuthGuard';
 
 export default function JobDescriptionPage() {
@@ -103,7 +102,13 @@ export default function JobDescriptionPage() {
   const downloadJD = () => {
     if (!generatedJD) return;
     
-    createJobDescriptionPDF(formData, generatedJD);
+    const element = document.createElement("a");
+    const file = new Blob([generatedJD], { type: 'text/markdown' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${formData.role.replace(/\s+/g, '_')}_Job_Description.md`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   return (

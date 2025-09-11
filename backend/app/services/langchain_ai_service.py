@@ -26,12 +26,18 @@ class CandidateAnalysisOutput(BaseModel):
     hiring_recommendation: str = Field(description="Hiring recommendation")
     salary_range: str = Field(description="Recommended salary range")
 
+class MarketDemand(BaseModel):
+    """Market demand metrics"""
+    demand_supply_ratio: float = Field(description="Demand to supply ratio")
+    competition_level: str = Field(description="Competition level: Low, Medium, High")
+    hiring_difficulty: str = Field(description="Hiring difficulty: Easy, Moderate, Challenging")
+
 class TalentPoolInsights(BaseModel):
     """Market insights and trends"""
     hot_skills: List[str] = Field(description="Currently in-demand skills")
     emerging_technologies: List[str] = Field(description="Emerging tech trends")
     salary_trends: Dict[str, float] = Field(description="Salary growth percentages")
-    market_demand: Dict[str, float] = Field(description="Demand-supply ratios")
+    market_demand: MarketDemand = Field(description="Market demand analysis")
     recommendations: List[str] = Field(description="Strategic recommendations")
 
 class InterviewKitOutput(BaseModel):
@@ -61,7 +67,7 @@ class LangChainRecruitmentAI:
         try:
             if settings.gemini_api_key:
                 self.llm = GoogleGenerativeAI(
-                    model="gemini-2.0-flash-exp",
+                    model="gemini-2.5-flash-lite",
                     google_api_key=settings.gemini_api_key,
                     temperature=0.3,
                     max_tokens=4000

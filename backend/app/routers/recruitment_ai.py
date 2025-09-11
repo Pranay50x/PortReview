@@ -1,8 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import Response
 from typing import Dict, Any, List
 from pydantic import BaseModel
 import asyncio
 from app.services.langchain_ai_service import langchain_ai
+from app.services.pdf_service import pdf_generator
 from app.core.database import get_database
 
 router = APIRouter(prefix="/api/recruitment", tags=["recruitment-ai"])
@@ -302,3 +304,129 @@ async def health_check():
             "error": str(e),
             "langchain": "fallback_mode"
         }
+
+# PDF Generation Endpoints
+
+class PDFGenerationRequest(BaseModel):
+    candidate_data: Dict[str, Any]
+    analysis_data: Dict[str, Any]
+
+class MarketAnalysisPDFRequest(BaseModel):
+    form_data: Dict[str, Any]
+    insights_data: Dict[str, Any]
+
+class HiringPredictionPDFRequest(BaseModel):
+    candidate_data: Dict[str, Any]
+    prediction_data: Dict[str, Any]
+
+class InterviewKitPDFRequest(BaseModel):
+    role: str
+    kit_data: Dict[str, Any]
+
+class JobDescriptionPDFRequest(BaseModel):
+    form_data: Dict[str, Any]
+    job_description: str
+
+@router.post("/generate-candidate-analysis-pdf")
+async def generate_candidate_analysis_pdf(request: PDFGenerationRequest):
+    """Generate candidate analysis PDF report"""
+    try:
+        pdf_bytes = pdf_generator.generate_candidate_analysis_pdf(
+            request.candidate_data, 
+            request.analysis_data
+        )
+        
+        filename = f"{request.candidate_data.get('name', 'candidate').replace(' ', '_')}_Analysis_Report.pdf"
+        
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+@router.post("/generate-market-analysis-pdf")
+async def generate_market_analysis_pdf(request: MarketAnalysisPDFRequest):
+    """Generate market analysis PDF report"""
+    try:
+        pdf_bytes = pdf_generator.generate_market_analysis_pdf(
+            request.form_data, 
+            request.insights_data
+        )
+        
+        role = request.form_data.get('role', 'market_analysis').replace(' ', '_')
+        filename = f"{role}_Market_Analysis_Report.pdf"
+        
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+@router.post("/generate-hiring-prediction-pdf")
+async def generate_hiring_prediction_pdf(request: HiringPredictionPDFRequest):
+    """Generate hiring prediction PDF report"""
+    try:
+        pdf_bytes = pdf_generator.generate_hiring_prediction_pdf(
+            request.candidate_data, 
+            request.prediction_data
+        )
+        
+        candidate_name = request.candidate_data.get('name', 'candidate').replace(' ', '_')
+        filename = f"{candidate_name}_Hiring_Prediction_Report.pdf"
+        
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+@router.post("/generate-interview-kit-pdf")
+async def generate_interview_kit_pdf(request: InterviewKitPDFRequest):
+    """Generate interview kit PDF report"""
+    try:
+        pdf_bytes = pdf_generator.generate_interview_kit_pdf(
+            request.role, 
+            request.kit_data
+        )
+        
+        role_name = request.role.replace(' ', '_')
+        filename = f"{role_name}_Interview_Kit.pdf"
+        
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
+
+@router.post("/generate-job-description-pdf")
+async def generate_job_description_pdf(request: JobDescriptionPDFRequest):
+    """Generate job description PDF report"""
+    try:
+        pdf_bytes = pdf_generator.generate_job_description_pdf(
+            request.form_data, 
+            request.job_description
+        )
+        
+        role_name = request.form_data.get('role', 'job_description').replace(' ', '_')
+        filename = f"{role_name}_Job_Description.pdf"
+        
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")

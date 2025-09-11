@@ -1,366 +1,426 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { 
   MessageSquare, 
-  Brain, 
-  Code, 
-  Users, 
-  Download, 
-  RefreshCw,
-  ArrowLeft,
-  Sparkles,
-  FileText,
   Target,
-  Clock,
-  Star
+  ArrowLeft,
+  Download,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
-import { generateInterviewKit } from '@/lib/ai-agents';
 import AuthGuard from '@/components/AuthGuard';
+import { recruitmentAIService, type InterviewKit } from '@/lib/recruitment-ai-service';
 
-interface Candidate {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  experience: string;
-  skills: string[];
-  location: string;
-  status: string;
-  matchScore: number;
-  githubUrl?: string;
-  portfolioUrl?: string;
-  resume?: string;
-  salary: string;
-}
+// Comprehensive role templates for interview kit generation
+const roleTemplates = [
+  {
+    id: '1',
+    title: 'Senior Frontend Developer',
+    department: 'Engineering',
+    level: 'Senior',
+    skills: ['React', 'TypeScript', 'Next.js', 'CSS', 'GraphQL', 'Testing'],
+    experience: '5+ years',
+    responsibilities: [
+      'Build scalable frontend applications',
+      'Lead frontend architecture decisions',
+      'Mentor junior developers',
+      'Collaborate with design and backend teams'
+    ]
+  },
+  {
+    id: '2',
+    title: 'Full Stack Engineer',
+    department: 'Engineering',
+    level: 'Mid-Senior',
+    skills: ['Node.js', 'React', 'Python', 'PostgreSQL', 'AWS', 'API Design'],
+    experience: '3-5 years',
+    responsibilities: [
+      'Develop full-stack applications',
+      'Design and implement APIs',
+      'Optimize database performance',
+      'Deploy and maintain cloud infrastructure'
+    ]
+  },
+  {
+    id: '3',
+    title: 'UX Designer',
+    department: 'Design',
+    level: 'Mid-level',
+    skills: ['Figma', 'User Research', 'Prototyping', 'Design Systems', 'Accessibility'],
+    experience: '3-4 years',
+    responsibilities: [
+      'Conduct user research and usability testing',
+      'Create wireframes and prototypes',
+      'Maintain design systems',
+      'Collaborate with product and engineering teams'
+    ]
+  },
+  {
+    id: '4',
+    title: 'DevOps Engineer',
+    department: 'Engineering',
+    level: 'Senior',
+    skills: ['Kubernetes', 'AWS', 'Terraform', 'CI/CD', 'Docker', 'Monitoring'],
+    experience: '4+ years',
+    responsibilities: [
+      'Manage cloud infrastructure',
+      'Implement CI/CD pipelines',
+      'Monitor system performance',
+      'Ensure security and compliance'
+    ]
+  },
+  {
+    id: '5',
+    title: 'Product Manager',
+    department: 'Product',
+    level: 'Senior',
+    skills: ['Product Strategy', 'Analytics', 'User Research', 'Roadmapping', 'Stakeholder Management'],
+    experience: '4+ years',
+    responsibilities: [
+      'Define product strategy and roadmap',
+      'Gather and analyze user feedback',
+      'Coordinate cross-functional teams',
+      'Track and optimize product metrics'
+    ]
+  },
+  {
+    id: '6',
+    title: 'Data Scientist',
+    department: 'Data',
+    level: 'Mid-Senior',
+    skills: ['Python', 'Machine Learning', 'SQL', 'Statistics', 'Data Visualization'],
+    experience: '3-5 years',
+    responsibilities: [
+      'Develop predictive models',
+      'Analyze complex datasets',
+      'Create data visualizations',
+      'Collaborate with engineering on ML implementations'
+    ]
+  }
+];
 
 export default function InterviewKitPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [candidateData, setCandidateData] = useState<Candidate | null>(null);
-  const [activeTab, setActiveTab] = useState<'technical' | 'behavioral' | 'coding'>('technical');
-  const [kit, setKit] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState(roleTemplates[0]);
+  const [interviewKit, setInterviewKit] = useState<InterviewKit | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [customRequirements, setCustomRequirements] = useState('');
+  const [aiStatus, setAiStatus] = useState<'checking' | 'available' | 'fallback'>('checking');
+  const [error, setError] = useState<string | null>(null);
 
+  // Check AI service availability
   useEffect(() => {
-    // Get candidate data from URL params or localStorage
-    const candidateId = searchParams.get('candidate');
-    if (candidateId) {
-      // In a real app, fetch candidate data from API
-      // For now, use mock data
-      const mockCandidate: Candidate = {
-        id: candidateId,
-        name: "Sarah Chen",
-        email: "sarah.chen@email.com",
-        role: "Senior Frontend Developer",
-        experience: "5+ years",
-        skills: ["React", "TypeScript", "Node.js", "GraphQL", "AWS"],
-        location: "San Francisco, CA",
-        status: "Under Review",
-        matchScore: 92,
-        githubUrl: "https://github.com/sarahchen",
-        portfolioUrl: "https://sarahchen.dev",
-        salary: "$120,000 - $140,000"
-      };
-      setCandidateData(mockCandidate);
-    }
-  }, [searchParams]);
+    const checkAIService = async () => {
+      try {
+        setAiStatus('checking');
+        await recruitmentAIService.checkAIHealth();
+        setAiStatus('available');
+      } catch {
+        setAiStatus('fallback');
+      }
+    };
+    
+    checkAIService();
+  }, []);
 
-  const handleGenerateKit = async () => {
-    if (!candidateData) return;
+  // Auto-generate kit for first role on load
+  useEffect(() => {
+    if (selectedRole && aiStatus !== 'checking') {
+      handleGenerate();
+    }
+  }, [aiStatus]);
+
+  // Auto-generate when role changes
+  useEffect(() => {
+    if (selectedRole && aiStatus !== 'checking') {
+      handleGenerate();
+    }
+  }, [selectedRole]);
+
+  const handleGenerate = async () => {
+    if (!selectedRole) return;
     
     setIsGenerating(true);
+    setError(null);
+    
     try {
-      const result = await generateInterviewKit({
-        candidate: candidateData,
-        requirements: customRequirements || `Interview kit for ${candidateData.role} position`
-      });
-      setKit(result);
-    } catch (error) {
-      console.error('Error generating interview kit:', error);
+      // Create mock candidate profile for the role
+      const candidateProfile = {
+        id: '1',
+        name: 'Candidate for Analysis',
+        role: selectedRole.title,
+        experience: selectedRole.experience,
+        location: 'Remote',
+        skills: selectedRole.skills,
+        summary: `Experienced ${selectedRole.title} with ${selectedRole.experience} of experience`,
+        github_username: 'example-candidate'
+      };
+
+      const jobRequirements = {
+        role: selectedRole.title,
+        skills: selectedRole.skills,
+        experience: selectedRole.experience,
+        responsibilities: selectedRole.responsibilities
+      };
+
+      const kit = await recruitmentAIService.createInterviewKit(candidateProfile, jobRequirements);
+      setInterviewKit(kit);
+    } catch (err) {
+      console.error('Failed to generate interview kit:', err);
+      setError('Failed to generate interview kit. Please try again.');
+    } finally {
+      setIsGenerating(false);
     }
-    setIsGenerating(false);
+  };
+    
+    const interviewContent = `# Interview Kit: ${selectedRole.title}
+
+## Interview Structure (60 minutes)
+
+### 1. Introduction & Background (10 minutes)
+- Tell me about yourself and your journey into ${dept}
+- What interests you most about this ${selectedRole.title} role?
+- Walk me through your most challenging project
+
+### 2. Technical Questions (25 minutes)
+
+#### Core Technologies
+${skillsList}
+
+#### Scenario-Based Questions
+${isDesign ? 
+  '- How would you approach designing a user-friendly interface for a complex application?\n- Describe your design process from research to final implementation\n- How do you ensure accessibility in your designs?' :
+  `- How would you approach building a scalable ${isFrontend ? 'user interface' : 'system architecture'}?\n- Describe a time when you had to debug a complex issue. Walk me through your process.\n- How do you stay updated with the latest trends in ${dept}?`
+}
+
+### 3. Problem-Solving (15 minutes)
+${isDesign ?
+  '- **Design Challenge**: Redesign a common interface element\n- **User Research**: How would you validate design decisions?\n- **Collaboration**: How do you work with developers and stakeholders?' :
+  '- **Code Review**: Present a piece of code and ask for improvements\n- **System Design**: Design a simple system architecture\n- **Best Practices**: Discuss coding standards and team collaboration'
+}
+
+### 4. Cultural Fit & Questions (10 minutes)
+- How do you handle tight deadlines and competing priorities?
+- Describe your ideal working environment and team structure
+- What questions do you have about our team, culture, or projects?
+
+## Evaluation Criteria
+
+### Technical Skills (40%)
+- Proficiency in ${topSkills}
+- Problem-solving approach
+- ${isDesign ? 'Design thinking and user empathy' : 'Code quality awareness'}
+
+### Experience Level (30%)
+- Relevant ${selectedRole.experience} experience
+- Project complexity and impact
+- Leadership/mentoring (for senior roles)
+
+### Communication (20%)
+- Clear technical explanations
+- Asking clarifying questions
+- Team collaboration mindset
+
+### Cultural Fit (10%)
+- Values alignment
+- Growth mindset
+- Enthusiasm for the role
+
+## Red Flags to Watch For
+- Unable to explain past projects clearly
+- No questions about the role or company
+- Dismissive of team practices or feedback
+${isDesign ? '- No user-centered thinking\n- Cannot explain design decisions' : '- Poor coding practices discussion\n- No interest in code quality'}
+
+## Follow-up Actions
+- Schedule technical round (if applicable)
+- Reference checks
+- Team meet & greet
+- Offer discussion
+
+---
+
+**Generated for:** ${selectedRole.title}  
+**Experience Level:** ${selectedRole.experience}  
+**Key Skills:** ${selectedRole.skills.join(', ')}`;
+
+    // Simulate API delay
+    setTimeout(() => {
+      setInterviewKit(interviewContent);
+      setIsGenerating(false);
+    }, 1500);
   };
 
   const downloadKit = () => {
-    if (!kit || !candidateData) return;
+    if (!selectedRole || !interviewKit) return;
     
-    const content = `
-INTERVIEW KIT FOR ${candidateData.name.toUpperCase()}
-Role: ${candidateData.role}
-Generated on: ${new Date().toLocaleDateString()}
-
-=== TECHNICAL QUESTIONS ===
-${kit.technicalQuestions?.map((q: any, i: number) => `${i + 1}. ${q.question}\n   Expected: ${q.expectedAnswer}\n`).join('\n') || 'No technical questions generated'}
-
-=== BEHAVIORAL QUESTIONS ===
-${kit.behavioralQuestions?.map((q: any, i: number) => `${i + 1}. ${q.question}\n   Expected: ${q.expectedAnswer}\n`).join('\n') || 'No behavioral questions generated'}
-
-=== CODING CHALLENGES ===
-${kit.codingChallenges?.map((c: any, i: number) => `${i + 1}. ${c.title}\n   Description: ${c.description}\n   Difficulty: ${c.difficulty}\n`).join('\n') || 'No coding challenges generated'}
-    `;
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `interview-kit-${candidateData.name.replace(/\s+/g, '-').toLowerCase()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const element = document.createElement("a");
+    const file = new Blob([interviewKit], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${selectedRole.title.replace(/\s+/g, '_')}_Interview_Kit.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   return (
-    <AuthGuard requiredUserType="recruiter">
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-        {/* Animated Background Effects */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/5 rounded-full blur-3xl animate-pulse"></div>
-        </div>
-        
-        <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => router.back()}
-            className="text-white hover:bg-white/10"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <MessageSquare className="w-8 h-8 text-green-400" />
-              AI Interview Kit Generator
-            </h1>
-            <p className="text-slate-300 mt-2">Generate personalized interview questions and coding challenges</p>
-          </div>
-        </div>
-
-        {candidateData && (
-          <div className="mb-8">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Candidate Profile
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-xl font-semibold text-white mb-2">{candidateData.name}</h3>
-                    <p className="text-slate-300 mb-2">{candidateData.role}</p>
-                    <p className="text-slate-400 text-sm mb-4">{candidateData.email}</p>
-                    
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {candidateData.skills.slice(0, 6).map((skill, index) => (
-                        <Badge key={index} variant="secondary" className="bg-green-600/20 text-green-300">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-300">{candidateData.experience} experience</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Target className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-300">Match Score: {candidateData.matchScore}%</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-300">{candidateData.salary}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Configuration */}
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Brain className="w-5 h-5" />
-                Interview Configuration
-              </CardTitle>
-              <CardDescription className="text-slate-300">
-                Customize the interview kit generation
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="requirements" className="text-white">Additional Requirements</Label>
-                <Textarea
-                  id="requirements"
-                  value={customRequirements}
-                  onChange={(e) => setCustomRequirements(e.target.value)}
-                  placeholder="Any specific requirements for this interview..."
-                  className="bg-white/5 border-white/20 text-white placeholder:text-slate-400 min-h-[100px]"
-                />
-              </div>
-
+    <AuthGuard>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        {/* Navigation */}
+        <div className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center gap-4">
               <Button
-                onClick={handleGenerateKit}
-                disabled={isGenerating || !candidateData}
-                className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                variant="ghost"
+                onClick={() => router.back()}
+                className="text-slate-300 hover:text-white hover:bg-slate-700"
               >
-                {isGenerating ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Generating Kit...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Generate Interview Kit
-                  </>
-                )}
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
               </Button>
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-blue-400" />
+                <h1 className="text-xl font-semibold text-white">AI Interview Kit Generator</h1>
+              </div>
+            </div>
+          </div>
+        </div>
 
-              {kit && (
-                <Button
-                  onClick={downloadKit}
-                  variant="outline"
-                  className="w-full border-white/20 text-white hover:bg-white/10"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Kit
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Generated Kit */}
-          <div className="lg:col-span-2">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
-                  Generated Interview Kit
-                </CardTitle>
-                {kit && (
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      variant={activeTab === 'technical' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setActiveTab('technical')}
-                      className="text-white"
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+            {/* Role Selection */}
+            <div className="order-2 lg:order-1 lg:col-span-1">
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-white flex items-center gap-2 text-lg">
+                    <Target className="w-5 h-5 text-green-400" />
+                    Select Role
+                  </CardTitle>
+                  <CardDescription className="text-slate-300 text-sm">
+                    Choose a role to generate interview kit
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 sm:space-y-3">
+                  {mockRoles.map((role) => (
+                    <div
+                      key={role.id}
+                      onClick={() => setSelectedRole(role)}
+                      className={`p-3 sm:p-4 rounded-lg border cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                        selectedRole?.id === role.id
+                          ? 'bg-blue-600/20 border-blue-500/40 shadow-lg shadow-blue-500/20'
+                          : 'bg-slate-800/50 border-slate-600 hover:border-slate-500 hover:bg-slate-800/70'
+                      }`}
                     >
-                      <Brain className="w-4 h-4 mr-2" />
-                      Technical ({kit.technicalQuestions?.length || 0})
-                    </Button>
-                    <Button
-                      variant={activeTab === 'behavioral' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setActiveTab('behavioral')}
-                      className="text-white"
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      Behavioral ({kit.behavioralQuestions?.length || 0})
-                    </Button>
-                    <Button
-                      variant={activeTab === 'coding' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setActiveTab('coding')}
-                      className="text-white"
-                    >
-                      <Code className="w-4 h-4 mr-2" />
-                      Coding ({kit.codingChallenges?.length || 0})
-                    </Button>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                {kit ? (
-                  <div className="space-y-4">
-                    {activeTab === 'technical' && (
-                      <div className="space-y-4">
-                        {kit.technicalQuestions?.map((question: any, index: number) => (
-                          <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
-                            <h4 className="text-white font-medium mb-2">Question {index + 1}</h4>
-                            <p className="text-slate-300 mb-3">{question.question}</p>
-                            <div className="bg-green-500/10 border border-green-500/20 rounded p-3">
-                              <p className="text-green-300 text-sm"><strong>Expected Answer:</strong></p>
-                              <p className="text-green-200 text-sm mt-1">{question.expectedAnswer}</p>
-                            </div>
-                          </div>
-                        )) || <p className="text-slate-400">No technical questions generated</p>}
+                      <div className="space-y-2">
+                        <h3 className="text-white font-medium text-sm sm:text-base">{role.title}</h3>
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-sm">
+                          <Badge variant="secondary" className="bg-green-600/20 text-green-300 text-xs px-1.5 py-0.5">
+                            {role.department}
+                          </Badge>
+                          <Badge variant="secondary" className="bg-blue-600/20 text-blue-300 text-xs px-1.5 py-0.5">
+                            {role.level}
+                          </Badge>
+                        </div>
+                        <p className="text-slate-400 text-xs">{role.experience}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {role.skills.slice(0, 2).map((skill) => (
+                            <Badge key={skill} variant="outline" className="text-xs border-slate-600 text-slate-300 px-1.5 py-0.5">
+                              {skill}
+                            </Badge>
+                          ))}
+                          {role.skills.length > 2 && (
+                            <Badge variant="outline" className="text-xs border-slate-600 text-slate-400 px-1.5 py-0.5">
+                              +{role.skills.length - 2}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
 
-                    {activeTab === 'behavioral' && (
-                      <div className="space-y-4">
-                        {kit.behavioralQuestions?.map((question: any, index: number) => (
-                          <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
-                            <h4 className="text-white font-medium mb-2">Question {index + 1}</h4>
-                            <p className="text-slate-300 mb-3">{question.question}</p>
-                            <div className="bg-blue-500/10 border border-blue-500/20 rounded p-3">
-                              <p className="text-blue-300 text-sm"><strong>What to Look For:</strong></p>
-                              <p className="text-blue-200 text-sm mt-1">{question.expectedAnswer}</p>
-                            </div>
-                          </div>
-                        )) || <p className="text-slate-400">No behavioral questions generated</p>}
-                      </div>
-                    )}
-
-                    {activeTab === 'coding' && (
-                      <div className="space-y-4">
-                        {kit.codingChallenges?.map((challenge: any, index: number) => (
-                          <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="text-white font-medium">{challenge.title}</h4>
-                              <Badge variant="outline" className="border-yellow-500/20 text-yellow-300">
-                                {challenge.difficulty}
-                              </Badge>
-                            </div>
-                            <p className="text-slate-300 mb-3">{challenge.description}</p>
-                            {challenge.sampleCode && (
-                              <div className="bg-gray-900/50 border border-white/10 rounded p-3">
-                                <p className="text-gray-300 text-sm mb-2"><strong>Sample Code:</strong></p>
-                                <pre className="text-gray-200 text-sm overflow-x-auto">
-                                  <code>{challenge.sampleCode}</code>
-                                </pre>
-                              </div>
-                            )}
-                          </div>
-                        )) || <p className="text-slate-400">No coding challenges generated</p>}
-                      </div>
+            {/* Interview Kit Results */}
+            <div className="order-1 lg:order-2 lg:col-span-2">
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <CardTitle className="text-white flex items-center gap-2 text-lg">
+                      <MessageSquare className="w-5 h-5 text-blue-400" />
+                      Interview Kit
+                      {selectedRole && (
+                        <Badge className="ml-2 bg-blue-600/20 text-blue-300 text-xs">
+                          {selectedRole.title}
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    {interviewKit && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={downloadKit}
+                        className="border-white/20 text-white hover:bg-white/10 w-full sm:w-auto"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download Kit
+                      </Button>
                     )}
                   </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <MessageSquare className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-400">
-                      Configure the interview requirements and click "Generate" to create your interview kit
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  {selectedRole && (
+                    <CardDescription className="text-slate-300 text-sm">
+                      Comprehensive interview guide for {selectedRole.title} position
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent className="p-3 sm:p-6">
+                  {isGenerating ? (
+                    <div className="flex flex-col items-center justify-center py-8 sm:py-12 space-y-4">
+                      <RefreshCw className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 animate-spin" />
+                      <p className="text-white text-base sm:text-lg text-center">AI is crafting your interview kit...</p>
+                      <p className="text-slate-400 text-sm text-center">Generating questions, evaluation criteria, and structure</p>
+                    </div>
+                  ) : interviewKit ? (
+                    <div className="bg-slate-900/50 rounded-lg p-3 sm:p-6 border border-slate-700">
+                      <div className="prose prose-invert prose-sm sm:prose-base max-w-none">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            h1: ({ children }) => <h1 className="text-lg sm:text-xl font-bold text-white mb-4">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-base sm:text-lg font-semibold text-white mb-3 mt-6">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-sm sm:text-base font-medium text-white mb-2 mt-4">{children}</h3>,
+                            h4: ({ children }) => <h4 className="text-sm font-medium text-blue-300 mb-2 mt-3">{children}</h4>,
+                            p: ({ children }) => <p className="text-slate-300 text-sm sm:text-base mb-3 leading-relaxed">{children}</p>,
+                            ul: ({ children }) => <ul className="text-slate-300 text-sm sm:text-base mb-3 space-y-1 pl-4">{children}</ul>,
+                            ol: ({ children }) => <ol className="text-slate-300 text-sm sm:text-base mb-3 space-y-1 pl-4">{children}</ol>,
+                            li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                            strong: ({ children }) => <strong className="text-white font-semibold">{children}</strong>,
+                            code: ({ children }) => <code className="bg-slate-800 text-blue-300 px-1 py-0.5 rounded text-sm">{children}</code>,
+                          }}
+                        >
+                          {interviewKit}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 sm:py-12 space-y-4">
+                      <MessageSquare className="w-8 h-8 sm:w-12 sm:h-12 text-slate-400" />
+                      <p className="text-slate-400 text-base sm:text-lg text-center">Select a role to generate interview kit</p>
+                      <p className="text-slate-500 text-sm text-center px-4">AI will create structured questions and evaluation criteria</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </AuthGuard>
   );
 }

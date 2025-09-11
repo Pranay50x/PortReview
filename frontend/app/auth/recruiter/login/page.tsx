@@ -72,7 +72,7 @@ export default function RecruiterLogin() {
                 <span className="text-slate-300">AI-powered skill assessment</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <TrendingUp className="w-4 h-4 text-green-400" />
+                <TrendingUp className="w-4 h-4 text-purple-400" />
                 <span className="text-slate-300">Portfolio analytics & insights</span>
               </div>
               <div className="flex items-center gap-3 text-sm">

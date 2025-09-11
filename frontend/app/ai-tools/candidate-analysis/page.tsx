@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import AuthGuard from '@/components/AuthGuard';
 import { recruitmentAIService, type CandidateProfile, type CandidateAnalysis } from '@/lib/recruitment-ai-service';
+import { createCandidateAnalysisPDF } from '@/lib/pdf-utils';
 
 interface Candidate extends CandidateProfile {
   github?: string;
@@ -163,44 +164,7 @@ export default function CandidateAnalysisPage() {
   const downloadAnalysis = () => {
     if (!selectedCandidate || !analysis) return;
     
-    // Convert analysis object to readable text format
-    const analysisText = `# Candidate Analysis: ${selectedCandidate.name}
-
-## Professional Profile
-- Role: ${selectedCandidate.role}
-- Experience: ${selectedCandidate.experience}
-- Location: ${selectedCandidate.location}
-- Summary: ${selectedCandidate.summary}
-
-## AI Analysis Results
-- Technical Score: ${analysis.technical_score}/100
-- Cultural Fit: ${analysis.cultural_fit}/100
-- Experience Level: ${analysis.experience_level}
-- Hiring Recommendation: ${analysis.hiring_recommendation}
-- Salary Range: ${analysis.salary_range}
-
-## Strengths
-${analysis.strengths.map(strength => `- ${strength}`).join('\n')}
-
-## Areas for Development
-${analysis.weaknesses.map(weakness => `- ${weakness}`).join('\n')}
-
-## Skills Assessment
-${Object.entries(analysis.skills_assessment).map(([skill, level]) => `- ${skill}: ${level}`).join('\n')}
-
-## Interview Questions
-${analysis.interview_questions.map((question, index) => `${index + 1}. ${question}`).join('\n')}
-
----
-Analysis generated on ${new Date().toLocaleDateString()}`;
-    
-    const element = document.createElement("a");
-    const file = new Blob([analysisText], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${selectedCandidate.name.replace(/\s+/g, '_')}_Analysis.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    createCandidateAnalysisPDF(selectedCandidate, analysis);
   };
 
   return (
