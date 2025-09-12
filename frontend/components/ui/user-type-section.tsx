@@ -117,7 +117,7 @@ export const UserTypeSection: React.FC = () => {
                     className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white py-4 text-lg font-semibold"
                     asChild
                   >
-                    <Link href="/auth/developer/login">
+                    <Link href="/auth/login">
                       <Rocket className="w-5 h-5 mr-2" />
                       Create My Portfolio
                     </Link>
@@ -181,7 +181,7 @@ export const UserTypeSection: React.FC = () => {
                     className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-4 text-lg font-semibold"
                     asChild
                   >
-                    <Link href="/auth/recruiter/login">
+                    <Link href="/auth/login">
                       <Search className="w-5 h-5 mr-2" />
                       Start Smart Recruiting
                     </Link>

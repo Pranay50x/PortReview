@@ -1,14 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Github, Chrome, Code, Search, ArrowRight, Shield } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { secureAuthService } from '@/lib/auth-secure';
 
 export default function SecureLoginChooser() {
   const [loading, setLoading] = useState<'github' | 'google' | null>(null);
+  const searchParams = useSearchParams();
+  const userType = searchParams?.get('type'); // 'developer' or 'recruiter'
+
+  // Auto-trigger login if user type is specified in URL
+  useEffect(() => {
+    if (userType === 'developer') {
+      handleGitHubLogin();
+    } else if (userType === 'recruiter') {
+      handleGoogleLogin();
+    }
+  }, [userType]);
 
   const handleGitHubLogin = async () => {
     setLoading('github');

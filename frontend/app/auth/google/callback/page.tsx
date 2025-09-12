@@ -51,8 +51,10 @@ function GoogleCallbackContent() {
           console.log('Email:', result.user.email);
           console.log('Redirecting to: /dashboard/recruiter');
           
-          // Immediate redirect to recruiter dashboard
-          router.push('/dashboard/recruiter');
+          // Give more time for cookie to be set and processed
+          setTimeout(() => {
+            router.push('/dashboard/recruiter');
+          }, 2000);
         } else {
           console.error('Google OAuth failed:', result.error);
           setStatus('error');
@@ -99,10 +101,10 @@ function GoogleCallbackContent() {
                 Please try logging in again, or contact support if the problem persists.
               </p>
               <button
-                onClick={() => router.push('/auth/recruiter/login')}
+                onClick={() => router.push('/auth/login')}
                 className="text-blue-400 hover:underline"
               >
-                Return to Recruiter Login
+                Return to Login
               </button>
             </div>
           )}

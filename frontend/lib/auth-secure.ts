@@ -155,9 +155,16 @@ class SecureAuthService {
    */
   async handleGitHubCallback(code: string, state?: string): Promise<AuthResult> {
     try {
+      console.log('=== handleGitHubCallback started ===');
+      console.log('Code:', code ? 'Present' : 'Missing');
+      console.log('State:', state);
+      
       // Verify state parameter to prevent CSRF
       const storedState = sessionStorage.getItem('github_oauth_state');
+      console.log('Stored state:', storedState);
+      
       if (state && storedState && state !== storedState) {
+        console.error('State mismatch - possible CSRF attack');
         sessionStorage.removeItem('github_oauth_state');
         sessionStorage.removeItem('auth_flow_type');
         return { success: false, error: 'Invalid state parameter. Possible CSRF attack.' };
@@ -167,6 +174,7 @@ class SecureAuthService {
       sessionStorage.removeItem('github_oauth_state');
       sessionStorage.removeItem('auth_flow_type');
 
+      console.log('Making secure request to /github/callback...');
       const response = await this.secureRequest('/github/callback', {
         method: 'POST',
         body: JSON.stringify({
@@ -175,10 +183,12 @@ class SecureAuthService {
         }),
       });
 
+      console.log('Secure request response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (response.ok) {
         const data = await response.json();
-        // CSRF token might be updated after login
-        await this.initializeCSRF();
+        console.log('Parsed response data:', data);
         return { 
           success: true, 
           user: data.user, 
@@ -186,9 +196,11 @@ class SecureAuthService {
         };
       } else {
         const error = await response.json();
-        return { success: false, error: error.detail || 'GitHub authentication failed' };
+        console.error('Backend callback error:', error);
+        return { success: false, error: error.detail || error.error || 'GitHub authentication failed' };
       }
     } catch (error) {
+      console.error('handleGitHubCallback exception:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Network error during authentication' 
@@ -260,8 +272,6 @@ class SecureAuthService {
 
       if (response.ok) {
         const data = await response.json();
-        // CSRF token might be updated after login
-        await this.initializeCSRF();
         return { 
           success: true, 
           user: data.user, 

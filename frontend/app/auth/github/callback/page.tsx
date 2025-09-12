@@ -42,6 +42,8 @@ function GitHubCallbackContent() {
         console.log('Processing secure GitHub OAuth callback for developer...');
         const result = await secureAuthService.handleGitHubCallback(code, state || undefined);
 
+        console.log('handleGitHubCallback result:', result);
+
         if (result.success && result.user) {
           setStatus('success');
           setMessage('Secure developer login successful! Redirecting to your dashboard...');
@@ -51,12 +53,13 @@ function GitHubCallbackContent() {
           console.log('GitHub username:', result.user.github_username);
           console.log('Redirecting to: /dashboard/developer');
           
-          // Immediate redirect to developer dashboard
+          // Give more time for cookie to be set and processed
           setTimeout(() => {
             router.push('/dashboard/developer');
-          }, 1500);
+          }, 2000);
         } else {
           console.error('Secure GitHub OAuth failed:', result.error);
+          console.error('Full result object:', result);
           setStatus('error');
           setMessage(result.error || 'GitHub authentication failed.');
         }

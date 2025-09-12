@@ -48,11 +48,38 @@ export async function POST(request: NextRequest) {
     const githubUser = await userResponse.json();
     console.log('GitHub user:', githubUser.login);
 
+    // Get user's email if not public
+    let userEmail = githubUser.email;
+    if (!userEmail) {
+      console.log('Public email not available, fetching primary email...');
+      try {
+        const emailResponse = await fetch('https://api.github.com/user/emails', {
+          headers: {
+            'Authorization': `Bearer ${access_token}`,
+            'User-Agent': 'PortReview-App'
+          }
+        });
+        
+        if (emailResponse.ok) {
+          const emails = await emailResponse.json();
+          const primaryEmail = emails.find((e: any) => e.primary);
+          userEmail = primaryEmail ? primaryEmail.email : `${githubUser.login}@github.local`;
+          console.log('Found primary email:', userEmail);
+        } else {
+          userEmail = `${githubUser.login}@github.local`;
+          console.log('Using fallback email:', userEmail);
+        }
+      } catch (emailError) {
+        console.error('Error fetching emails:', emailError);
+        userEmail = `${githubUser.login}@github.local`;
+      }
+    }
+
     // Create user object
     const user = {
       id: githubUser.id.toString(),
       name: githubUser.name || githubUser.login,
-      email: githubUser.email,
+      email: userEmail,
       user_type: 'developer' as const,
       github_username: githubUser.login,
       avatar_url: githubUser.avatar_url,
@@ -98,6 +125,8 @@ export async function POST(request: NextRequest) {
     });
 
     console.log('GitHub OAuth successful for:', user.name);
+    console.log('Setting auth-token cookie with:', JSON.stringify(user).substring(0, 100) + '...');
+    console.log('Cookie settings - httpOnly: false, secure:', process.env.NODE_ENV === 'production');
     return response;
 
   } catch (error) {
