@@ -1,21 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, CheckCircle, XCircle, Github } from 'lucide-react';
-import { githubAuthService } from '@/lib/auth-github';
+import { Clock, CheckCircle, XCircle, Github, Loader2 } from 'lucide-react';
+import { secureAuthService } from '@/lib/auth-secure';
 
-export default function GitHubCallback() {
+function GitHubCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Processing your GitHub login...');
+  const [message, setMessage] = useState('Processing your secure GitHub login...');
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('=== GitHub OAuth Callback (Developer) ===');
+        console.log('=== Secure GitHub OAuth Callback (Developer) ===');
         console.log('Full URL:', window.location.href);
         console.log('Search params:', searchParams.toString());
         
@@ -39,27 +39,29 @@ export default function GitHubCallback() {
           return;
         }
 
-        console.log('Processing GitHub OAuth callback for developer...');
-        const result = await githubAuthService.handleGitHubCallback(code);
+        console.log('Processing secure GitHub OAuth callback for developer...');
+        const result = await secureAuthService.handleGitHubCallback(code, state || undefined);
 
         if (result.success && result.user) {
           setStatus('success');
-          setMessage('Developer login successful! Redirecting to your dashboard...');
+          setMessage('Secure developer login successful! Redirecting to your dashboard...');
           
-          console.log('=== GitHub OAuth Success (Developer) ===');
+          console.log('=== Secure GitHub OAuth Success (Developer) ===');
           console.log('Authenticated developer:', result.user.name);
           console.log('GitHub username:', result.user.github_username);
           console.log('Redirecting to: /dashboard/developer');
           
           // Immediate redirect to developer dashboard
-          router.push('/dashboard/developer');
+          setTimeout(() => {
+            router.push('/dashboard/developer');
+          }, 1500);
         } else {
-          console.error('GitHub OAuth failed:', result.error);
+          console.error('Secure GitHub OAuth failed:', result.error);
           setStatus('error');
           setMessage(result.error || 'GitHub authentication failed.');
         }
       } catch (error) {
-        console.error('GitHub auth callback error:', error);
+        console.error('Secure GitHub auth callback error:', error);
         setStatus('error');
         setMessage('An unexpected error occurred during GitHub authentication.');
       }
@@ -109,5 +111,34 @@ export default function GitHubCallback() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700/50">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <Loader2 className="w-12 h-12 text-blue-400 animate-spin" />
+          </div>
+          <CardTitle className="text-white flex items-center justify-center gap-2">
+            <Github className="w-5 h-5" />
+            Loading...
+          </CardTitle>
+          <CardDescription className="text-slate-300">
+            Preparing authentication...
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
+
+export default function GitHubCallback() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <GitHubCallbackContent />
+    </Suspense>
   );
 }

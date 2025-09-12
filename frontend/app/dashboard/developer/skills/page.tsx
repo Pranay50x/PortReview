@@ -45,7 +45,13 @@ function SkillTrackerContent() {
     try {
       const currentUser = getCurrentUser();
       
-      if (!currentUser?.github_username) {
+      if (!currentUser || currentUser.user_type !== 'developer') {
+        setLoading(false);
+        return;
+      }
+
+      const developerUser = currentUser as import('@/lib/auth-github').DeveloperUser;
+      if (!developerUser.github_username) {
         setLoading(false);
         return;
       }

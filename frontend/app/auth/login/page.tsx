@@ -1,11 +1,35 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Github, Chrome, Code, Search, ArrowRight } from 'lucide-react';
+import { Github, Chrome, Code, Search, ArrowRight, Shield } from 'lucide-react';
 import Link from 'next/link';
+import { secureAuthService } from '@/lib/auth-secure';
 
-export default function LoginChooser() {
+export default function SecureLoginChooser() {
+  const [loading, setLoading] = useState<'github' | 'google' | null>(null);
+
+  const handleGitHubLogin = async () => {
+    setLoading('github');
+    try {
+      secureAuthService.redirectToGitHub();
+    } catch (error) {
+      console.error('GitHub login failed:', error);
+      setLoading(null);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading('google');
+    try {
+      secureAuthService.redirectToGoogle();
+    } catch (error) {
+      console.error('Google login failed:', error);
+      setLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
       {/* Background effects */}
@@ -16,8 +40,11 @@ export default function LoginChooser() {
 
       <div className="relative z-10 w-full max-w-4xl">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Choose Your Portal</h1>
-          <p className="text-xl text-slate-300">Select your account type to get started</p>
+          <div className="flex justify-center items-center gap-2 mb-4">
+            <Shield className="w-8 h-8 text-blue-400" />
+            <h1 className="text-4xl font-bold text-white">Secure Portal</h1>
+          </div>
+          <p className="text-xl text-slate-300">Enhanced security with httpOnly cookies & CSRF protection</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -31,18 +58,18 @@ export default function LoginChooser() {
               </div>
               <CardTitle className="text-2xl text-white">I'm a Developer</CardTitle>
               <CardDescription className="text-slate-300">
-                Showcase your GitHub projects and generate AI-powered portfolios
+                Showcase your GitHub projects with secure authentication
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2 text-sm text-slate-400">
                 <div className="flex items-center gap-2">
                   <Github className="w-4 h-4" />
-                  <span>GitHub integration</span>
+                  <span>Secure GitHub OAuth</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="w-4 h-4" />
-                  <span>Auto-portfolio generation</span>
+                  <Shield className="w-4 h-4" />
+                  <span>httpOnly cookie authentication</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ArrowRight className="w-4 h-4" />
@@ -50,13 +77,16 @@ export default function LoginChooser() {
                 </div>
               </div>
               <Button 
-                asChild
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={handleGitHubLogin}
+                disabled={loading === 'github'}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
               >
-                <Link href="/auth/developer/login">
+                {loading === 'github' ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                ) : (
                   <Github className="w-4 h-4 mr-2" />
-                  Sign in with GitHub
-                </Link>
+                )}
+                {loading === 'github' ? 'Connecting...' : 'Sign in with GitHub'}
               </Button>
             </CardContent>
           </Card>
@@ -71,18 +101,18 @@ export default function LoginChooser() {
               </div>
               <CardTitle className="text-2xl text-white">I'm a Recruiter</CardTitle>
               <CardDescription className="text-slate-300">
-                Find and assess developers with AI-powered insights and analytics
+                Find developers with secure AI-powered insights
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2 text-sm text-slate-400">
                 <div className="flex items-center gap-2">
                   <Chrome className="w-4 h-4" />
-                  <span>Google OAuth login</span>
+                  <span>Secure Google OAuth</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ArrowRight className="w-4 h-4" />
-                  <span>Advanced candidate search</span>
+                  <Shield className="w-4 h-4" />
+                  <span>CSRF protection</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ArrowRight className="w-4 h-4" />
@@ -90,13 +120,16 @@ export default function LoginChooser() {
                 </div>
               </div>
               <Button 
-                asChild
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleGoogleLogin}
+                disabled={loading === 'google'}
+                className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
               >
-                <Link href="/auth/recruiter/login">
+                {loading === 'google' ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                ) : (
                   <Chrome className="w-4 h-4 mr-2" />
-                  Sign in with Google
-                </Link>
+                )}
+                {loading === 'google' ? 'Connecting...' : 'Sign in with Google'}
               </Button>
             </CardContent>
           </Card>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Chrome, Search, TrendingUp, Users, BarChart3 } from 'lucide-react';
-import { googleAuthService } from '@/lib/auth-google';
+import { secureAuthService } from '@/lib/auth-secure';
 
 export default function RecruiterLogin() {
   const router = useRouter();
@@ -13,20 +13,20 @@ export default function RecruiterLogin() {
 
   useEffect(() => {
     // Check if recruiter is already authenticated
-    if (googleAuthService.isAuthenticated()) {
-      router.push('/dashboard/recruiter');
-    }
+    const checkAuth = async () => {
+      if (await secureAuthService.isAuthenticated()) {
+        router.push('/dashboard/recruiter');
+      }
+    };
+    checkAuth();
   }, [router]);
 
-  const handleGoogleLogin = () => {
-    console.log('=== Recruiter Login - Google OAuth ===');
+    const handleGoogleLogin = () => {
     setIsLoading(true);
-    
     try {
-      googleAuthService.redirectToGoogle();
+      secureAuthService.redirectToGoogle();
     } catch (error) {
       console.error('Google login error:', error);
-      alert('Google authentication is not properly configured. Please contact support.');
       setIsLoading(false);
     }
   };

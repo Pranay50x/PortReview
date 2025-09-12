@@ -37,8 +37,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import AuthGuard from '@/components/AuthGuard';
-import { getCurrentUser, signOut, User as AuthUser } from '@/lib/auth';
+import AuthGuard from '@/components/SecureAuthGuard';
+import { secureAuthService, SecureUser } from '@/lib/auth-secure';
 import { githubAnalyticsService, GitHubStats as AnalyticsStats, UserActivity } from '@/lib/github-analytics';
 
 interface GitHubStats {
@@ -56,7 +56,7 @@ interface GitHubStats {
 
 function DeveloperDashboardContent() {
   const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<SecureUser | null>(null);
   const [githubStats, setGithubStats] = useState<GitHubStats | null>(null);
   const [userActivity, setUserActivity] = useState<UserActivity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,36 +89,43 @@ function DeveloperDashboardContent() {
   };
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    setUser(currentUser);
+    const loadCurrentUser = async () => {
+      const currentUser = await secureAuthService.getCurrentUser();
+      setUser(currentUser);
+      
+      if (currentUser?.user_type === 'developer') {
+        if (currentUser.github_username) {
+          loadRealGitHubStats();
+          loadUserActivity();
+        }
+      } else {
+        setLoading(false);
+        setStatsLoading(false);
+      }
+    };
     
-    if (currentUser?.github_username) {
-      loadRealGitHubStats();
-      loadUserActivity();
-    } else {
-      setLoading(false);
-      setStatsLoading(false);
-    }
+    loadCurrentUser();
   }, []);
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await secureAuthService.logout();
     router.push('/');
   };
 
   const loadRealGitHubStats = async () => {
     try {
       setStatsLoading(true);
-      const currentUser = getCurrentUser();
+      const currentUser = await secureAuthService.getCurrentUser();
+      const githubUsername = currentUser?.github_username;
       
-      if (!currentUser?.github_username) {
+      if (!githubUsername) {
         throw new Error('No GitHub username found');
       }
 
       // Try to fetch real GitHub user data from our backend endpoint
       let userData = null;
       try {
-        const userResponse = await fetch(`http://localhost:8000/api/github/user/${currentUser.github_username}`);
+        const userResponse = await fetch(`http://localhost:8000/api/github/user/${githubUsername}`);
         if (userResponse.ok) {
           userData = await userResponse.json();
         }
@@ -135,7 +142,7 @@ function DeveloperDashboardContent() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            username: currentUser.github_username
+            username: githubUsername
           })
         });
         
@@ -149,7 +156,7 @@ function DeveloperDashboardContent() {
       // If backend is not available, try direct GitHub API
       if (!userData && !analysisData) {
         try {
-          const directResponse = await fetch(`https://api.github.com/users/${currentUser.github_username}`);
+          const directResponse = await fetch(`https://api.github.com/users/${githubUsername}`);
           if (directResponse.ok) {
             const directData = await directResponse.json();
             userData = {
@@ -255,9 +262,9 @@ function DeveloperDashboardContent() {
           email: user.email,
           name: user.name,
           user_type: user.user_type,
-          github_username: user.github_username,
+          github_username: user?.github_username,
           profile: {
-            bio: user.position,
+            bio: user.company || 'Software Developer',
             company: user.company,
             avatar_url: user.avatar_url,
           },
@@ -293,9 +300,9 @@ function DeveloperDashboardContent() {
     Object.values({
       name: user.name,
       email: user.email,
-      github: user.github_username,
+      github: user?.github_username,
       company: user.company,
-      position: user.position,
+      position: user.company || 'Software Developer',
       avatar: user.avatar_url
     }).filter(Boolean).length * 16.67 : 0;
 
@@ -701,7 +708,7 @@ function DeveloperDashboardContent() {
                   </Avatar>
                   <CardTitle className="text-white text-xl">{user?.name}</CardTitle>
                   <CardDescription className="text-slate-400">
-                    {user?.position || 'Full Stack Developer'}
+                    {user?.company || 'Full Stack Developer'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">

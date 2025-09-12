@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, CheckCircle, XCircle, Chrome } from 'lucide-react';
-import { googleAuthService } from '@/lib/auth-google';
+import { Clock, CheckCircle, XCircle, Chrome, Loader2 } from 'lucide-react';
+import { secureAuthService } from '@/lib/auth-secure';
 
-export default function GoogleCallback() {
+function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -40,7 +40,7 @@ export default function GoogleCallback() {
         }
 
         console.log('Processing Google OAuth callback for recruiter...');
-        const result = await googleAuthService.handleGoogleCallback(code);
+        const result = await secureAuthService.handleGoogleCallback(code);
 
         if (result.success && result.user) {
           setStatus('success');
@@ -109,5 +109,34 @@ export default function GoogleCallback() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      <Card className="w-full max-w-md bg-slate-800/50 border-slate-700/50">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <Loader2 className="w-12 h-12 text-green-400 animate-spin" />
+          </div>
+          <CardTitle className="text-white flex items-center justify-center gap-2">
+            <Chrome className="w-5 h-5" />
+            Loading...
+          </CardTitle>
+          <CardDescription className="text-slate-300">
+            Preparing authentication...
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
+
+export default function GoogleCallback() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }

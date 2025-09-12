@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Github, Code, GitBranch, Users, Zap } from 'lucide-react';
-import { githubAuthService } from '@/lib/auth-github';
+import { secureAuthService } from '@/lib/auth-secure';
 
 export default function DeveloperLogin() {
   const router = useRouter();
@@ -13,9 +13,12 @@ export default function DeveloperLogin() {
 
   useEffect(() => {
     // Check if developer is already authenticated
-    if (githubAuthService.isAuthenticated()) {
-      router.push('/dashboard/developer');
-    }
+    const checkAuth = async () => {
+      if (await secureAuthService.isAuthenticated()) {
+        router.push('/dashboard/developer');
+      }
+    };
+    checkAuth();
   }, [router]);
 
   const handleGitHubLogin = () => {
@@ -23,7 +26,7 @@ export default function DeveloperLogin() {
     setIsLoading(true);
     
     try {
-      githubAuthService.redirectToGitHub();
+      secureAuthService.redirectToGitHub();
     } catch (error) {
       console.error('GitHub login error:', error);
       setIsLoading(false);

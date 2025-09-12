@@ -29,6 +29,13 @@ import {
   Eye
 } from 'lucide-react';
 
+const getGitHubUsername = (user: any): string => {
+  if (user && 'github_username' in user) {
+    return user.github_username || '';
+  }
+  return '';
+};
+
 interface AutoPortfolioProps {
   onPortfolioCreated?: (portfolioData: any) => void;
 }
@@ -103,13 +110,15 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
     setUser(currentUser);
     
     // Auto-fill with logged-in user's GitHub username
-    if (currentUser?.github_username) {
-      setGithubUsername(currentUser.github_username);
+    const githubUsername = getGitHubUsername(currentUser);
+    if (githubUsername) {
+      setGithubUsername(githubUsername);
     }
   }, []);
 
   const getEffectiveUsername = () => {
-    return (useLoggedInUser && user?.github_username) ? user.github_username : githubUsername;
+    const userGitHub = getGitHubUsername(user);
+    return (useLoggedInUser && userGitHub) ? userGitHub : githubUsername;
   };
 
   const simulateLoadingSteps = async () => {
@@ -267,11 +276,11 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
           </div>
           <p className="text-xl text-slate-300 max-w-3xl mx-auto">
             Transform your GitHub into a compelling portfolio with AI-powered insights. 
-            No manual work required – {user?.github_username ? 'your GitHub is already connected!' : 'just enter your username and watch the magic happen.'}
+            No manual work required – {getGitHubUsername(user) ? 'your GitHub is already connected!' : 'just enter your username and watch the magic happen.'}
           </p>
           
           {/* User Status */}
-          {user?.github_username ? (
+          {getGitHubUsername(user) ? (
             <div className="mt-6 p-4 bg-gradient-to-r from-green-900/20 to-blue-900/20 rounded-lg border border-green-800/30 max-w-md mx-auto">
               <div className="flex items-center justify-center gap-2 text-green-400 mb-2">
                 <CheckCircle className="w-5 h-5" />
@@ -279,7 +288,7 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
               </div>
               <div className="flex items-center justify-center gap-2 text-slate-300">
                 <Github className="w-4 h-4" />
-                <span>@{user.github_username}</span>
+                <span>@{getGitHubUsername(user)}</span>
               </div>
             </div>
           ) : (
@@ -396,14 +405,14 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
               <CardTitle className="flex items-center gap-2 text-white">
                 <Github className="w-5 h-5" />
                 GitHub Username
-                {user?.github_username && (
+                {getGitHubUsername(user) && (
                   <Badge variant="secondary" className="bg-green-900/50 text-green-300 border-green-700/50">
                     Auto-detected
                   </Badge>
                 )}
               </CardTitle>
               <CardDescription className="text-slate-400">
-                {user?.github_username 
+                {getGitHubUsername(user)
                   ? 'We\'ve automatically detected your GitHub username, but you can change it below if needed'
                   : 'Enter your GitHub username to generate a professional portfolio automatically'
                 }
@@ -411,7 +420,7 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
             </CardHeader>
             <CardContent>
               {/* Username Source Toggle */}
-              {user?.github_username && (
+              {getGitHubUsername(user) && (
                 <div className="mb-4 p-3 bg-slate-700/30 rounded-lg">
                   <div className="flex items-center justify-between">
                     <label className="flex items-center gap-2 text-slate-300">
@@ -421,7 +430,7 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
                         onChange={(e) => setUseLoggedInUser(e.target.checked)}
                         className="rounded"
                       />
-                      Use my connected GitHub account (@{user.github_username})
+                      Use my connected GitHub account (@{getGitHubUsername(user)})
                     </label>
                     <div className="flex items-center gap-1 text-green-400">
                       <User className="w-4 h-4" />
@@ -435,14 +444,14 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
                 <Input
                   type="text"
                   placeholder="e.g., octocat"
-                  value={useLoggedInUser && user?.github_username ? user.github_username : githubUsername}
+                  value={useLoggedInUser && getGitHubUsername(user) ? getGitHubUsername(user) : githubUsername}
                   onChange={(e) => {
                     setGithubUsername(e.target.value);
-                    if (user?.github_username) {
+                    if (getGitHubUsername(user)) {
                       setUseLoggedInUser(false);
                     }
                   }}
-                  disabled={useLoggedInUser && !!user?.github_username}
+                  disabled={useLoggedInUser && !!getGitHubUsername(user)}
                   className="bg-slate-900 border-slate-600 text-white placeholder-slate-400 flex-1 disabled:opacity-50"
                   onKeyPress={(e) => e.key === 'Enter' && handlePreview()}
                 />

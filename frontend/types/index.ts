@@ -3,7 +3,7 @@ export interface User {
   email: string;
   name: string;
   userType: 'developer' | 'recruiter';
-  githubUsername?: string;
+  github_username?: string;
   company?: string;
   position?: string;
   avatarUrl?: string;

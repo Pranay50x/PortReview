@@ -29,6 +29,13 @@ function SharePortfolioContent() {
   const [copied, setCopied] = useState(false);
   const [portfolioUrl, setPortfolioUrl] = useState('');
 
+  const getGitHubUsername = (user: User): string => {
+    if ('github_username' in user) {
+      return user.github_username || 'demo';
+    }
+    return 'demo';
+  };
+
   useEffect(() => {
     const currentUser = getCurrentUser();
     if (currentUser) {
@@ -36,7 +43,7 @@ function SharePortfolioContent() {
       
       // Generate portfolio URL based on GitHub username or user ID
       const baseUrl = window.location.origin;
-      const username = currentUser.github_username || 'demo';
+      const username = getGitHubUsername(currentUser);
       setPortfolioUrl(`${baseUrl}/portfolio/${username}`);
     }
   }, []);
@@ -155,7 +162,7 @@ function SharePortfolioContent() {
                   </Avatar>
                   <div>
                     <h3 className="text-lg font-semibold text-white">{user.name}</h3>
-                    <p className="text-slate-400">@{user.github_username}</p>
+                    <p className="text-slate-400">@{getGitHubUsername(user)}</p>
                   </div>
                 </div>
                 
@@ -177,7 +184,7 @@ function SharePortfolioContent() {
 
               <div className="text-center">
                 <Button className="bg-cyan-600 hover:bg-cyan-500 text-white text-sm sm:text-base" asChild>
-                  <Link href={`/portfolio/${user.github_username}`} target="_blank">
+                  <Link href={`/portfolio/${getGitHubUsername(user)}`} target="_blank">
                     <span className="hidden sm:inline">View Live Portfolio</span>
                     <span className="sm:hidden">View Portfolio</span>
                   </Link>

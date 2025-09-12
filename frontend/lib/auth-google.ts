@@ -81,7 +81,7 @@ class GoogleAuthService {
   // Google OAuth for recruiters
   redirectToGoogle() {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectUri = 'http://localhost:3000/auth/google/callback';
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
     const scope = 'openid email profile';
     
     console.log('=== Google OAuth Redirect (Recruiter) ===');

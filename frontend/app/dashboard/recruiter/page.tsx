@@ -32,7 +32,7 @@ import {
   Sparkles,
   ArrowUpRight
 } from 'lucide-react';
-import AuthGuard from '@/components/AuthGuard';
+import AuthGuard from '@/components/SecureAuthGuard';
 import { getCurrentUser, signOut, type User } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 

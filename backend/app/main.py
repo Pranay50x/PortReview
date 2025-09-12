@@ -1,29 +1,25 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import auth, users, portfolios, reviews, search, github_ai, github_stats, analytics, auto_portfolio, recruitment_ai
+from .routers import auth_secure  # Import secure auth router
 from app.core.database import init_db
 from app.core.config import settings
+from app.middleware.security import setup_security_middleware
 
 app = FastAPI(
-    title="PortReviewer API",
-    description="AI-powered portfolio analysis with authentication",
-    version="1.0.0",
+    title="PortReviewer API - Secure Edition",
+    description="AI-powered portfolio analysis with enhanced security",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
+# Setup comprehensive security middleware
+app = setup_security_middleware(app)
 
-# Include routers
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+# Include routers - Use secure auth router instead of original
+app.include_router(auth_secure.router, prefix="/api/auth", tags=["auth-secure"])
+app.include_router(auth.router, prefix="/api/auth/legacy", tags=["auth-legacy"])  # Keep legacy for migration
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(portfolios.router, prefix="/api/portfolios", tags=["portfolios"])
 app.include_router(reviews.router, prefix="/api/reviews", tags=["reviews"])
@@ -38,7 +34,14 @@ app.include_router(recruitment_ai.router, tags=["recruitment-ai"])
 async def startup_event():
     """Initialize database and services on startup."""
     await init_db()
-    print("🚀 PortReviewer API started successfully!")
+    print("🚀 PortReviewer API started successfully with enhanced security!")
+    print("🛡️  Security features enabled:")
+    print("   - httpOnly cookies for tokens")
+    print("   - CSRF protection") 
+    print("   - Rate limiting")
+    print("   - Input sanitization")
+    print("   - Security headers")
+    print("   - Account lockout protection")
 
 @app.on_event("shutdown")
 async def shutdown_event():
