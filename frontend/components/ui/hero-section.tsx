@@ -46,14 +46,14 @@ export const HeroSection: React.FC = () => {
         initial="hidden"
         animate="visible"
       >
-        <motion.div
+        {/* <motion.div
           className="inline-flex items-center px-4 py-2 mb-8 text-sm font-medium bg-slate-800/50 border border-slate-700/50 rounded-full backdrop-blur-sm"
           variants={itemVariants}
         >
           {/* <span className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse" />
           <Rocket className="w-4 h-4 mr-2 text-cyan-400" />
-          Revolutionizing Technical Recruiting */}
-        </motion.div>
+          Revolutionizing Technical Recruiting */
+         }
 
         <motion.h1
           className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight px-4"

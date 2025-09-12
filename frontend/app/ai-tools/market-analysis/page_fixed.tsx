@@ -267,16 +267,16 @@ function MarketAnalysisContent() {
             <Button
               onClick={handleAnalyze}
               disabled={isAnalyzing || !formData.role || !formData.location}
-              className="text-white w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
               {isAnalyzing ? (
                 <>
-                  <RefreshCw className="w-4 h-4 mr-2 text-white animate-spin" />
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   Analyzing Market Trends...
                 </>
               ) : (
                 <>
-                  <BarChart3 className="w-4 text-white h-4 mr-2" />
+                  <BarChart3 className="w-4 h-4 mr-2" />
                   Generate Market Analysis
                 </>
               )}

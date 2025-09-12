@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   FileText, 
   Sparkles, 
@@ -134,25 +135,25 @@ export default function JobDescriptionPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-          {/* AI Status */}
-          <div className="mb-6 flex items-center gap-2 text-sm">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* AI Status Indicator */}
+          <div className="mb-6 flex items-center gap-2">
             {aiStatus === 'checking' && (
               <>
                 <RefreshCw className="w-4 h-4 text-yellow-400 animate-spin" />
-                <span className="text-yellow-400">Checking AI service...</span>
+                <span className="text-sm text-yellow-400">Checking AI service...</span>
               </>
             )}
             {aiStatus === 'available' && (
               <>
                 <CheckCircle className="w-4 h-4 text-green-400" />
-                <span className="text-green-400">AI Job Description Generator Available</span>
+                <span className="text-sm text-green-400">AI Job Description Generator Available</span>
               </>
             )}
             {aiStatus === 'fallback' && (
               <>
                 <AlertCircle className="w-4 h-4 text-orange-400" />
-                <span className="text-orange-400">Using Enhanced Fallback Generator</span>
+                <span className="text-sm text-orange-400">Using Enhanced Fallback Generator</span>
               </>
             )}
           </div>
@@ -262,16 +263,16 @@ export default function JobDescriptionPage() {
                 <Button
                   onClick={handleGenerate}
                   disabled={isGenerating || !formData.role || !formData.company}
-                  className="text-white w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 >
                   {isGenerating ? (
                     <>
-                      <RefreshCw className="text-white w-4 h-4 mr-2 animate-spin" />
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                       Generating Job Description...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="text-white w-4 h-4 mr-2" />
+                      <Sparkles className="w-4 h-4 mr-2" />
                       Generate Job Description
                     </>
                   )}
@@ -374,6 +375,172 @@ export default function JobDescriptionPage() {
                 </CardContent>
               </Card>
             )}
+          </div>
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="company" className="text-white text-sm font-medium">Company Name</Label>
+                    <Input
+                      id="company"
+                      value={formData.company}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                      placeholder="e.g. TechCorp, StartupXYZ..."
+                      className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location" className="text-white text-sm font-medium">Location (Optional)</Label>
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      placeholder="e.g. San Francisco, Remote, Hybrid..."
+                      className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="experience" className="text-white text-sm font-medium">Experience Level (Optional)</Label>
+                    <Input
+                      id="experience"
+                      value={formData.experience}
+                      onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                      placeholder="e.g. Entry-level, 3-5 years, Senior..."
+                      className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="skills" className="text-white text-sm font-medium">Required Skills (Optional)</Label>
+                    <Textarea
+                      id="skills"
+                      value={formData.skills}
+                      onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                      placeholder="e.g. React, Node.js, TypeScript, AWS, Docker..."
+                      className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 mt-2 min-h-[80px]"
+                    />
+                    <p className="text-xs text-slate-400 mt-1">Separate multiple skills with commas</p>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!formData.role || !formData.company || isGenerating || aiStatus === 'checking'}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3"
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Generating Job Description...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate Job Description
+                    </>
+                  )}
+                </Button>
+
+                {/* Feature highlights */}
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700">
+                  <div className="text-center">
+                    <Building2 className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                    <div className="text-xs text-slate-400">Company-specific</div>
+                  </div>
+                  <div className="text-center">
+                    <MapPin className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                    <div className="text-xs text-slate-400">Location-aware</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Generated Job Description */}
+            <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-white">Generated Job Description</CardTitle>
+                    <CardDescription className="text-slate-400">
+                      AI-crafted job description ready to post
+                    </CardDescription>
+                  </div>
+                  {generatedJD && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={copyToClipboard}
+                        variant="outline"
+                        size="sm"
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy
+                      </Button>
+                      <Button
+                        onClick={downloadJD}
+                        variant="outline"
+                        size="sm"
+                        className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isGenerating ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <RefreshCw className="w-8 h-8 text-blue-400 animate-spin" />
+                    <p className="text-white text-lg text-center">
+                      AI is crafting your job description...
+                    </p>
+                    <p className="text-slate-400 text-sm text-center">
+                      Analyzing role requirements and company context
+                    </p>
+                  </div>
+                ) : generatedJD ? (
+                  <div className="space-y-4">
+                    <div className="bg-slate-900/50 rounded-lg p-6 border border-slate-700 max-h-[600px] overflow-y-auto">
+                      <div className="text-slate-200 prose prose-invert prose-sm max-w-none leading-relaxed">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {generatedJD}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                    
+                    {/* Quick stats */}
+                    <div className="grid grid-cols-2 gap-4 text-center text-sm">
+                      <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                        <div className="text-white font-medium">
+                          {generatedJD.split(' ').length} words
+                        </div>
+                        <div className="text-slate-400 text-xs">Word count</div>
+                      </div>
+                      <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                        <div className="text-white font-medium">
+                          ~{Math.ceil(generatedJD.split(' ').length / 200)} min
+                        </div>
+                        <div className="text-slate-400 text-xs">Reading time</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <FileText className="w-12 h-12 text-slate-400" />
+                    <p className="text-slate-400 text-lg text-center">
+                      Ready to generate job description
+                    </p>
+                    <p className="text-slate-500 text-sm text-center px-4">
+                      Fill in the job requirements and let AI create a comprehensive job posting
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

@@ -262,16 +262,16 @@ export default function JobDescriptionPage() {
                 <Button
                   onClick={handleGenerate}
                   disabled={isGenerating || !formData.role || !formData.company}
-                  className="text-white w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 >
                   {isGenerating ? (
                     <>
-                      <RefreshCw className="text-white w-4 h-4 mr-2 animate-spin" />
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                       Generating Job Description...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="text-white w-4 h-4 mr-2" />
+                      <Sparkles className="w-4 h-4 mr-2" />
                       Generate Job Description
                     </>
                   )}
