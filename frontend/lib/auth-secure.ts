@@ -210,7 +210,14 @@ class SecureAuthService {
       console.log('Response ok:', response.ok);
 
       if (response.ok) {
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          const responseText = await response.text();
+          console.error('Failed to parse success response as JSON:', responseText);
+          return { success: false, error: 'Invalid response format from server' };
+        }
         console.log('Parsed response data:', data);
         return { 
           success: true, 
@@ -218,7 +225,14 @@ class SecureAuthService {
           message: data.message 
         };
       } else {
-        const error = await response.json();
+        let error;
+        try {
+          error = await response.json();
+        } catch (parseError) {
+          const responseText = await response.text();
+          console.error('Failed to parse error response as JSON:', responseText);
+          return { success: false, error: `Server error: ${response.status} - ${responseText.substring(0, 200)}` };
+        }
         console.error('Backend callback error:', error);
         return { success: false, error: error.detail || error.error || 'GitHub authentication failed' };
       }
@@ -316,14 +330,28 @@ class SecureAuthService {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          const responseText = await response.text();
+          console.error('Failed to parse Google success response as JSON:', responseText);
+          return { success: false, error: 'Invalid response format from server' };
+        }
         return { 
           success: true, 
           user: data.user, 
           message: data.message 
         };
       } else {
-        const error = await response.json();
+        let error;
+        try {
+          error = await response.json();
+        } catch (parseError) {
+          const responseText = await response.text();
+          console.error('Failed to parse Google error response as JSON:', responseText);
+          return { success: false, error: `Server error: ${response.status} - ${responseText.substring(0, 200)}` };
+        }
         return { success: false, error: error.detail || 'Google authentication failed' };
       }
     } catch (error) {
