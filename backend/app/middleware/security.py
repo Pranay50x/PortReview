@@ -247,22 +247,24 @@ def setup_security_middleware(app: FastAPI):
     redis_client = None
     print("🔗 Redis disabled - using in-memory caching")
     
-    # Trust only specific hosts in production
+    # Trust specific hosts including dev tunnel
+    trusted_hosts = [
+        "localhost", 
+        "127.0.0.1", 
+        "portreview.appwrite.network", 
+        "*.appwrite.network",
+        "49mkgr23-8000.inc1.devtunnels.ms",
+        "*.devtunnels.ms"
+    ]
+    
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["localhost", "127.0.0.1", "portreview.appwrite.network", "*.appwrite.network"]
+        allowed_hosts=trusted_hosts
     )
     
     # CORS settings for production deployment
-    if settings.environment == "production":
-        cors_origins = [
-            "https://portreview.appwrite.network",
-            "http://localhost:3000"  # Keep for local testing
-        ]
-        print(f"🌐 Production CORS: {cors_origins}")
-    else:
-        cors_origins = ["*"]
-        print("🌐 Development CORS: Allow all origins")
+    cors_origins = settings.cors_origins
+    print(f"🌐 CORS origins: {cors_origins}")
     
     app.add_middleware(
         CORSMiddleware,
