@@ -21,7 +21,7 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
-import AuthGuard from '@/components/AuthGuard';
+import SecureAuthGuard from '@/components/SecureAuthGuard';
 import { recruitmentAIService, type CandidateProfile, type HiringPrediction } from '@/lib/recruitment-ai-service';
 import { createHiringPredictionPDF } from '@/lib/pdf-utils';
 
@@ -214,7 +214,7 @@ export default function HiringPredictionPage() {
   };
 
   return (
-    <AuthGuard>
+    <SecureAuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         {/* Navigation */}
         <div className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700">
@@ -469,6 +469,6 @@ export default function HiringPredictionPage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
+    </SecureAuthGuard>
   );
 }

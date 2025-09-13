@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Target, Code, Rocket, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
-import AuthGuard from '@/components/AuthGuard';
+import SecureAuthGuard from '@/components/SecureAuthGuard';
 
 export default function AISuggestionsPage() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function AISuggestionsPage() {
   }
 
   return (
-    <AuthGuard>
+    <SecureAuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center space-x-4 mb-8">
@@ -67,6 +67,6 @@ export default function AISuggestionsPage() {
           </Card>
         </div>
       </div>
-    </AuthGuard>
+    </SecureAuthGuard>
   );
 }

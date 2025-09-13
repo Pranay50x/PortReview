@@ -22,7 +22,7 @@ import {
   Award,
   Activity
 } from 'lucide-react';
-import AuthGuard from '@/components/AuthGuard';
+import SecureAuthGuard from '@/components/SecureAuthGuard';
 import { useRouter } from 'next/navigation';
 import { recruitmentAIService, type TalentPoolInsights } from '@/lib/recruitment-ai-service';
 import { createMarketAnalysisPDF } from '@/lib/pdf-utils';
@@ -415,8 +415,8 @@ function MarketAnalysisContent() {
 
 export default function MarketAnalysis() {
   return (
-    <AuthGuard requiredUserType="recruiter">
+    <SecureAuthGuard requiredUserType="recruiter">
       <MarketAnalysisContent />
-    </AuthGuard>
+    </SecureAuthGuard>
   );
 }

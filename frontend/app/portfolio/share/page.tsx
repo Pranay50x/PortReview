@@ -19,7 +19,7 @@ import {
   Download,
   ArrowLeft
 } from 'lucide-react';
-import AuthGuard from '@/components/AuthGuard';
+import SecureAuthGuard from '@/components/SecureAuthGuard';
 import { getCurrentUser, User } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
@@ -311,8 +311,8 @@ function SharePortfolioContent() {
 
 export default function SharePortfolio() {
   return (
-    <AuthGuard requiredUserType="developer">
+    <SecureAuthGuard requiredUserType="developer">
       <SharePortfolioContent />
-    </AuthGuard>
+    </SecureAuthGuard>
   );
 }
