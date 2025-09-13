@@ -120,10 +120,21 @@ class GoogleAuthService {
       });
 
       if (!tokenResponse.ok) {
-        throw new Error('Failed to exchange code for token');
+        const errorText = await tokenResponse.text();
+        console.error('Google token exchange failed:', errorText);
+        throw new Error('Failed to exchange code for token: ' + errorText);
       }
 
-      const { access_token } = await tokenResponse.json();
+      let tokenData;
+      try {
+        tokenData = await tokenResponse.json();
+      } catch (parseError) {
+        const responseText = await tokenResponse.text();
+        console.error('Failed to parse token response as JSON:', responseText);
+        throw new Error('Invalid response from token endpoint: ' + responseText);
+      }
+
+      const { access_token } = tokenData;
       console.log('Got Google access token:', access_token ? 'Yes' : 'No');
 
       // Get user data from Google

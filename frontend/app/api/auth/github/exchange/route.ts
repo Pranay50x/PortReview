@@ -16,6 +16,17 @@ export async function POST(request: NextRequest) {
     const clientSecret = process.env.GITHUB_CLIENT_SECRET || 'your_github_client_secret_here';
     const redirectUri = `${request.headers.get('origin')}/auth/github/callback`;
 
+    if (!clientId || !clientSecret || clientSecret === 'your_github_client_secret_here') {
+      console.error('GitHub OAuth environment variables missing or invalid:', { 
+        clientId: !!clientId, 
+        clientSecret: clientSecret !== 'your_github_client_secret_here' 
+      });
+      return NextResponse.json(
+        { error: 'GitHub OAuth is not properly configured' },
+        { status: 500 }
+      );
+    }
+
     // Exchange code for access token
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',

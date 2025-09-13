@@ -8,6 +8,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authorization code is required' }, { status: 400 });
     }
 
+    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
+    const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      console.error('GitHub OAuth environment variables missing:', { clientId: !!clientId, clientSecret: !!clientSecret });
+      return NextResponse.json(
+        { error: 'GitHub OAuth is not properly configured' },
+        { status: 500 }
+      );
+    }
+
     // Exchange code for access token
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
@@ -16,8 +27,8 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        client_id: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID,
-        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        client_id: clientId,
+        client_secret: clientSecret,
         code: code,
       }),
     });
