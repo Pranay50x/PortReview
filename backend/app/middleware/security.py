@@ -250,13 +250,14 @@ def setup_security_middleware(app: FastAPI):
             port=6379, 
             db=0, 
             decode_responses=True,
-            socket_connect_timeout=5,
-            socket_timeout=5
+            socket_connect_timeout=1,
+            socket_timeout=1
         )
         # Test connection
         redis_client.ping()
+        print("✅ Redis connected successfully")
     except Exception as e:
-        print(f"Redis connection failed: {e}. Using in-memory fallback.")
+        print(f"⚠️ Redis connection failed: {e}. Using in-memory fallback.")
         redis_client = None
     
     # Trust only specific hosts in production
@@ -265,38 +266,29 @@ def setup_security_middleware(app: FastAPI):
         allowed_hosts=["localhost", "127.0.0.1", "portreview.appwrite.network", "*.appwrite.network"]
     )
     
-    # CORS with strict settings
+    # CORS with permissive settings for development
+    cors_origins = settings.cors_origins if settings.environment == "production" else ["*"]
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=cors_origins,
         allow_credentials=True,  # Required for httpOnly cookies
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=[
-            "Authorization",
-            "Content-Type", 
-            "X-CSRF-Token",
-            "X-Requested-With",
-            "Accept",
-            "Origin",
-            "User-Agent",
-            "DNT",
-            "Cache-Control",
-            "X-Mx-ReqToken",
-            "Keep-Alive",
-            "If-Modified-Since"
-        ],
+        allow_headers=["*"],
         expose_headers=["X-Process-Time"]
     )
     
-    # Custom security middleware
-    app.add_middleware(SecurityMiddleware, redis_client=redis_client)
-    app.add_middleware(RateLimitMiddleware, redis_client=redis_client)
-    app.add_middleware(CSRFMiddleware)
+    # Custom security middleware (disabled for development)
+    # app.add_middleware(SecurityMiddleware, redis_client=redis_client)
+    # app.add_middleware(RateLimitMiddleware, redis_client=redis_client)
+    # app.add_middleware(CSRFMiddleware)
     
-    # Rate limiting with slowapi
-    limiter = Limiter(key_func=get_remote_address)
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    print("⚠️ Security middleware disabled for development")
+    
+    # Rate limiting with slowapi (disabled for development)
+    # limiter = Limiter(key_func=get_remote_address)
+    # app.state.limiter = limiter
+    # app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     
     return app
 
