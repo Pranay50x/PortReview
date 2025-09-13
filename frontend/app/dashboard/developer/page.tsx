@@ -41,6 +41,9 @@ import AuthGuard from '@/components/SecureAuthGuard';
 import { secureAuthService, SecureUser } from '@/lib/auth-secure';
 import { githubAnalyticsService, GitHubStats as AnalyticsStats, UserActivity } from '@/lib/github-analytics';
 
+// Use environment variable for API URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface GitHubStats {
   public_repos: number;
   followers: number;
@@ -125,7 +128,7 @@ function DeveloperDashboardContent() {
       // Try to fetch real GitHub user data from our backend endpoint
       let userData = null;
       try {
-        const userResponse = await fetch(`http://localhost:8000/api/github/user/${githubUsername}`);
+        const userResponse = await fetch(`${API_BASE_URL}/api/github/user/${githubUsername}`);
         if (userResponse.ok) {
           userData = await userResponse.json();
         }
@@ -136,7 +139,7 @@ function DeveloperDashboardContent() {
       // Get repository data from analyze endpoint for repository count and technical skills
       let analysisData = null;
       try {
-        const analysisResponse = await fetch(`http://localhost:8000/api/github/analyze`, {
+        const analysisResponse = await fetch(`${API_BASE_URL}/api/github/analyze`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

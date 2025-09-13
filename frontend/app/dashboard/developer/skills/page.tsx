@@ -20,8 +20,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import AuthGuard from '@/components/AuthGuard';
-import { getCurrentUser } from '@/lib/auth';
+import AuthGuard from '@/components/SecureAuthGuard';
+import { secureAuthService } from '@/lib/auth-secure';
+
+// Use environment variable for API URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface SkillData {
   language: string;
@@ -43,21 +46,20 @@ function SkillTrackerContent() {
 
   const loadSkillsData = async () => {
     try {
-      const currentUser = getCurrentUser();
+      const currentUser = await secureAuthService.getCurrentUser();
       
       if (!currentUser || currentUser.user_type !== 'developer') {
         setLoading(false);
         return;
       }
 
-      const developerUser = currentUser as import('@/lib/auth-github').DeveloperUser;
-      if (!developerUser.github_username) {
+      if (!currentUser.github_username) {
         setLoading(false);
         return;
       }
 
       // Use the analyze endpoint which has real GitHub data
-      const response = await fetch(`http://localhost:8000/api/github/analyze`, {
+      const response = await fetch(`${API_BASE_URL}/api/github/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

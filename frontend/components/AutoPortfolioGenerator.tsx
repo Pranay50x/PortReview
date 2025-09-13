@@ -29,6 +29,9 @@ import {
   Eye
 } from 'lucide-react';
 
+// Use environment variable for API URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 const getGitHubUsername = (user: any): string => {
   if (user && 'github_username' in user) {
     return user.github_username || '';
@@ -162,7 +165,7 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
     setIsGenerating(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/auto-portfolio/demo/${effectiveUsername}`);
+      const response = await fetch(`${API_BASE_URL}/api/auto-portfolio/demo/${effectiveUsername}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -193,7 +196,7 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
       // Start loading animation
       await simulateLoadingSteps();
 
-      const response = await fetch('http://localhost:8000/api/auto-portfolio/create-from-github', {
+      const response = await fetch(`${API_BASE_URL}/api/auto-portfolio/create-from-github`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
