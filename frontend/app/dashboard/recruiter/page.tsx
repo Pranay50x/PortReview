@@ -33,23 +33,32 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import AuthGuard from '@/components/SecureAuthGuard';
-import { getCurrentUser, signOut, type User } from '@/lib/auth';
+import { secureAuthService, type SecureUser } from '@/lib/auth-secure';
 import { useRouter } from 'next/navigation';
 
 function RecruiterDashboardContent() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SecureUser | null>(null);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-      loadInitialData();
-    }
+    const loadUserAndData = async () => {
+      try {
+        const currentUser = await secureAuthService.getCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+          loadInitialData();
+        }
+      } catch (error) {
+        console.error('Error loading user:', error);
+        setLoading(false);
+      }
+    };
+
+    loadUserAndData();
   }, []);
 
   const loadInitialData = async () => {
@@ -104,7 +113,7 @@ function RecruiterDashboardContent() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    await secureAuthService.logout();
     router.push('/');
   };
 
@@ -149,11 +158,7 @@ function RecruiterDashboardContent() {
               <div className="flex items-center space-x-3">
                 <Avatar className="h-8 w-8">
                   <AvatarImage 
-                    src={
-                      user?.avatar_url || 
-                      (user?.user_type === 'recruiter' && (user as any)?.google_profile?.picture) || 
-                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`
-                    } 
+                    src={user?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} 
                   />
                   <AvatarFallback>{user?.name?.[0] || 'R'}</AvatarFallback>
                 </Avatar>

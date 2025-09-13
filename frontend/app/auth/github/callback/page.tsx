@@ -11,9 +11,14 @@ function GitHubCallbackContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing your secure GitHub login...');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
+    // Prevent duplicate calls
+    if (isProcessing) return;
+    
     const handleCallback = async () => {
+      setIsProcessing(true);
       try {
         console.log('=== Secure GitHub OAuth Callback (Developer) ===');
         console.log('Full URL:', window.location.href);
@@ -56,7 +61,7 @@ function GitHubCallbackContent() {
           // Give more time for cookie to be set and processed
           setTimeout(() => {
             router.push('/dashboard/developer');
-          }, 2000);
+          }, 1500);
         } else {
           console.error('Secure GitHub OAuth failed:', result.error);
           console.error('Full result object:', result);
@@ -67,11 +72,13 @@ function GitHubCallbackContent() {
         console.error('Secure GitHub auth callback error:', error);
         setStatus('error');
         setMessage('An unexpected error occurred during GitHub authentication.');
+      } finally {
+        setIsProcessing(false);
       }
     };
 
     handleCallback();
-  }, [searchParams, router]);
+  }, [searchParams, router, isProcessing]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
@@ -104,10 +111,10 @@ function GitHubCallbackContent() {
                 Please try logging in again, or contact support if the problem persists.
               </p>
               <button
-                onClick={() => router.push('/auth/developer/login')}
+                onClick={() => router.push('/auth/login')}
                 className="text-blue-400 hover:underline"
               >
-                Return to Developer Login
+                Return to Login
               </button>
             </div>
           )}

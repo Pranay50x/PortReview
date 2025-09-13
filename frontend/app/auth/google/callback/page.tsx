@@ -11,9 +11,14 @@ function GoogleCallbackContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing your Google login...');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
+    // Prevent duplicate calls
+    if (isProcessing) return;
+    
     const handleCallback = async () => {
+      setIsProcessing(true);
       try {
         console.log('=== Google OAuth Callback (Recruiter) ===');
         console.log('Full URL:', window.location.href);
@@ -54,7 +59,7 @@ function GoogleCallbackContent() {
           // Give more time for cookie to be set and processed
           setTimeout(() => {
             router.push('/dashboard/recruiter');
-          }, 2000);
+          }, 1500);
         } else {
           console.error('Google OAuth failed:', result.error);
           setStatus('error');
@@ -64,11 +69,13 @@ function GoogleCallbackContent() {
         console.error('Google auth callback error:', error);
         setStatus('error');
         setMessage('An unexpected error occurred during Google authentication.');
+      } finally {
+        setIsProcessing(false);
       }
     };
 
     handleCallback();
-  }, [searchParams, router]);
+  }, [searchParams, router, isProcessing]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">

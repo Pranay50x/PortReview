@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Github, Chrome, Code, Search, ArrowRight, Shield } from 'lucide-react';
+import { Github, Chrome, Code, Search, ArrowRight, Shield, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { secureAuthService } from '@/lib/auth-secure';
 
-export default function SecureLoginChooser() {
+function SecureLoginChooserContent() {
   const [loading, setLoading] = useState<'github' | 'google' | null>(null);
   const searchParams = useSearchParams();
   const userType = searchParams?.get('type'); // 'developer' or 'recruiter'
@@ -157,5 +157,24 @@ export default function SecureLoginChooser() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      <div className="text-center">
+        <Loader2 className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
+        <p className="text-white text-xl">Loading login page...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function SecureLoginChooser() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <SecureLoginChooserContent />
+    </Suspense>
   );
 }
