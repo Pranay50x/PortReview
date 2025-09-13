@@ -14,7 +14,11 @@ export async function POST(request: NextRequest) {
 
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = `${request.nextUrl.origin}/auth/google/callback`;
+    
+    // Use production URL for redirect URI
+    const redirectUri = process.env.NODE_ENV === 'production' 
+      ? 'https://portreview.appwrite.network/auth/google/callback'
+      : `${request.nextUrl.origin}/auth/google/callback`;
 
     console.log('Google token exchange - Environment check:');
     console.log('- Client ID:', clientId ? `${clientId.substring(0, 20)}...` : 'MISSING');
