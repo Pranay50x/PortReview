@@ -87,7 +87,7 @@ class GitHubAuthService {
   // GitHub OAuth for developers
   redirectToGitHub() {
     const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-    const redirectUri = 'http://localhost:3000/auth/github/callback';
+    const redirectUri = `${window.location.origin}/auth/github/callback`;
     const scope = 'read:user user:email';
     
     console.log('=== GitHub OAuth Redirect (Developer) ===');
