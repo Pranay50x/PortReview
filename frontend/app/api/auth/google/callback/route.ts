@@ -46,18 +46,23 @@ export async function POST(request: NextRequest) {
 
     // Exchange code for access token
     console.log('Starting token exchange...');
+    const tokenRequestBody = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      code,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectUri,
+    });
+
+    console.log('Token request body:', tokenRequestBody.toString());
+    console.log('Exact redirect_uri being sent:', redirectUri);
+
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        code,
-        grant_type: 'authorization_code',
-        redirect_uri: redirectUri,
-      }),
+      body: tokenRequestBody,
     });
 
     console.log('Google token response status:', tokenResponse.status);
