@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
     }
 
     // GitHub OAuth configuration
-    const clientId = 'Ov23liYitVzomNyoJ4Ek';
+    const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
     const clientSecret = process.env.GITHUB_CLIENT_SECRET || 'your_github_client_secret_here';
-    const redirectUri = 'http://localhost:3000/auth/callback';
+    const redirectUri = `${request.headers.get('origin')}/auth/github/callback`;
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {

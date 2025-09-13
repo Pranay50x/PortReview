@@ -136,7 +136,7 @@ class SecureAuthService {
    */
   redirectToGitHub(): void {
     const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/auth/callback`;
+    const redirectUri = `${window.location.origin}/auth/github/callback`;
     const scope = 'read:user user:email';
     
     // Generate secure state parameter
@@ -236,7 +236,7 @@ class SecureAuthService {
    */
   redirectToGoogle(): void {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/auth/callback`;
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
     const scope = 'openid email profile';
     
     if (!clientId) {
