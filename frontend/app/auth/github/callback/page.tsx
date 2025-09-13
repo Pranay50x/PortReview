@@ -11,14 +11,22 @@ function GitHubCallbackContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Processing your secure GitHub login...');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [hasProcessed, setHasProcessed] = useState(false);
 
   useEffect(() => {
-    // Prevent duplicate calls
-    if (isProcessing) return;
+    // Prevent duplicate calls - check both state and session storage
+    if (hasProcessed) return;
+    
+    const sessionKey = 'github_callback_processing';
+    if (sessionStorage.getItem(sessionKey)) {
+      console.log('GitHub callback already processing, skipping duplicate call');
+      return;
+    }
     
     const handleCallback = async () => {
-      setIsProcessing(true);
+      setHasProcessed(true);
+      sessionStorage.setItem(sessionKey, 'true');
+      
       try {
         console.log('=== Secure GitHub OAuth Callback (Developer) ===');
         console.log('Full URL:', window.location.href);
@@ -68,19 +76,20 @@ function GitHubCallbackContent() {
           setStatus('error');
           setMessage(result.error || 'GitHub authentication failed.');
         }
-      } catch (error) {
-        console.error('Secure GitHub auth callback error:', error);
-        setStatus('error');
-        setMessage('An unexpected error occurred during GitHub authentication.');
-      } finally {
-        setIsProcessing(false);
-      }
-    };
+        } catch (error) {
+          console.error('Secure GitHub auth callback error:', error);
+          setStatus('error');
+          setMessage('An unexpected error occurred during GitHub authentication.');
+        } finally {
+          // Clean up session storage on completion
+          setTimeout(() => {
+            sessionStorage.removeItem(sessionKey);
+          }, 2000);
+        }
+      };
 
-    handleCallback();
-  }, [searchParams, router, isProcessing]);
-
-  return (
+      handleCallback();
+    }, [searchParams, router, hasProcessed]);  return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
       <Card className="w-full max-w-md bg-slate-800/50 border-slate-700/50">
         <CardHeader className="text-center">

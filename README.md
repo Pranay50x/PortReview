@@ -1,5 +1,8 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/PortReview-AI%20Portfolio%20Generator-6366f1?style=for-the-badge&logo=sparkles&logoCol# Clone the repository
+  <img src="https://img.shields.io/badge/PortReview-AI%20Portfolio%20Generator-6366f1?style=for-the-badge&logo=sparkles&logoCol# Clone the repo```bash
+# 1. Clone the repository
+git clone https://github.com/Pranay50x/PortReview.git
+cd PortReviewory
 git clone https://github.com/Pranay50x/PortReview.git
 cd PortReviewwhite" alt="PortReview">
   
@@ -29,46 +32,49 @@ cd PortReviewwhite" alt="PortReview">
 
 ### 🤖 **AI Auto-Portfolio Generator**
 - **One-click portfolio creation** from GitHub alone
-- **AI-powered code analysis** and insights
+- **AI-powered code analysis** with LangChain & Google Gemini
+- **Smart content generation** using recruitment AI agents
 - **Quality scoring** (0-100 craftsmanship score)
-- **Smart duplicate prevention**
-- **Professional content generation**
+- **Intelligent duplicate prevention**
+- **Professional portfolio generation**
 
 ### 📊 **Advanced Analytics**
 - **Real-time portfolio views tracking**
-- **GitHub activity analysis**
+- **GitHub activity analysis & insights**
 - **Skills progression monitoring**
 - **Performance metrics dashboard**
-- **Engagement insights**
+- **User engagement analytics**
 
-### 🎯 **Smart Assessment Tools**
-- **Context-aware interview questions**
-- **AI-generated candidate insights**
-- **Technical skill evaluation**
-- **Code quality analysis**
-- **Project impact scoring**
+### 🎯 **AI-Powered Assessment Tools**
+- **LangChain-driven candidate analysis**
+- **Context-aware interview question generation**
+- **Technical skill evaluation with AI**
+- **Code quality analysis & scoring**
+- **Intelligent hiring recommendations**
 
 </td>
 <td width="50%">
 
-### 👥 **Dual User Experience**
-- **Developer Dashboard** - Portfolio management & insights
-- **Recruiter Dashboard** - Candidate assessment tools
-- **Role-based authentication** with GitHub integration
-- **Personalized recommendations**
+### 👥 **Dual Authentication System**
+- **Developer Dashboard** - GitHub OAuth integration
+- **Recruiter Dashboard** - Google OAuth integration  
+- **Secure authentication** with CSRF protection
+- **JWT token-based sessions** with auto-refresh
+- **Role-based access control**
 
-### 🔍 **Intelligent Search**
-- **AI-powered candidate matching**
-- **Skill-based filtering**
-- **Portfolio discovery**
+### 🔍 **AI-Powered Search & Matching**
+- **LangChain-driven candidate matching**
+- **Intelligent skill-based filtering**
+- **AI-powered portfolio discovery**
 - **Advanced search algorithms**
+- **Smart recommendation engine**
 
-### 🚀 **Modern Tech Stack**
-- **Lightning-fast performance**
-- **Real-time updates**
+### 🚀 **Modern Architecture**
+- **Lightning-fast performance** with Next.js 15
+- **Real-time updates** and analytics
 - **Mobile-responsive design**
-- **Cloud-native architecture**
-- **Scalable infrastructure**
+- **Type-safe development** with TypeScript
+- **Production-ready security** features
 
 </td>
 </tr>
@@ -84,7 +90,7 @@ cd PortReviewwhite" alt="PortReview">
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
   <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
-  <img src="https://img.shields.io/badge/Framer_Motion-black?style=for-the-badge&logo=framer&logoColor=blue" alt="Framer Motion">
+  <img src="https://img.shields.io/badge/shadcn/ui-000000?style=for-the-badge&logo=shadcnui&logoColor=white" alt="shadcn/ui">
 </div>
 
 ### **Backend**
@@ -92,22 +98,32 @@ cd PortReviewwhite" alt="PortReview">
   <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB">
-  <img src="https://img.shields.io/badge/Appwrite-FD366E?style=for-the-badge&logo=appwrite&logoColor=white" alt="Appwrite">
+  <img src="https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=pydantic&logoColor=white" alt="Pydantic">
   <img src="https://img.shields.io/badge/Uvicorn-009688?style=for-the-badge&logo=gunicorn&logoColor=white" alt="Uvicorn">
 </div>
 
-### **AI & Machine Learning**
+### **AI & Intelligence**
 <div align="center">
   <img src="https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=google&logoColor=white" alt="Google Gemini">
+  <img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white" alt="LangChain">
   <img src="https://img.shields.io/badge/AI_Agents-FF6B6B?style=for-the-badge&logo=robot&logoColor=white" alt="AI Agents">
-  <img src="https://img.shields.io/badge/Machine_Learning-FF8C00?style=for-the-badge&logo=tensorflow&logoColor=white" alt="Machine Learning">
+  <img src="https://img.shields.io/badge/Recruitment_AI-4285F4?style=for-the-badge&logo=brain&logoColor=white" alt="Recruitment AI">
+</div>
+
+### **Authentication & Security**
+<div align="center">
+  <img src="https://img.shields.io/badge/GitHub_OAuth-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub OAuth">
+  <img src="https://img.shields.io/badge/Google_OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Google OAuth">
+  <img src="https://img.shields.io/badge/Secure_Auth-10B981?style=for-the-badge&logo=shield&logoColor=white" alt="Secure Auth">
+  <img src="https://img.shields.io/badge/JWT_Tokens-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT">
+  <img src="https://img.shields.io/badge/CSRF_Protection-DC2626?style=for-the-badge&logo=security&logoColor=white" alt="CSRF Protection">
 </div>
 
 ### **Integration & APIs**
 <div align="center">
   <img src="https://img.shields.io/badge/GitHub_API-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub API">
-  <img src="https://img.shields.io/badge/OAuth-4285F4?style=for-the-badge&logo=oauth&logoColor=white" alt="OAuth">
   <img src="https://img.shields.io/badge/REST_API-02569B?style=for-the-badge&logo=rest&logoColor=white" alt="REST API">
+  <img src="https://img.shields.io/badge/Auto_Portfolio_API-6366F1?style=for-the-badge&logo=api&logoColor=white" alt="Portfolio API">
 </div>
 
 ### **Development & Deployment**
@@ -116,6 +132,7 @@ cd PortReviewwhite" alt="PortReview">
   <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white" alt="Git">
   <img src="https://img.shields.io/badge/VS_Code-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white" alt="VS Code">
   <img src="https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white" alt="ESLint">
+  <img src="https://img.shields.io/badge/Prettier-F7B93E?style=for-the-badge&logo=prettier&logoColor=black" alt="Prettier">
 </div>
 
 ---
@@ -144,31 +161,69 @@ cd PortReviewwhite" alt="PortReview">
 
 ---
 
+## 🧠 AI Architecture & Intelligence
+
+### **LangChain-Powered Recruitment AI**
+- **Google Gemini Integration** - Advanced natural language processing
+- **Multi-Agent System** - Specialized AI agents for different tasks
+- **Candidate Analysis Agent** - Technical skill assessment & cultural fit scoring
+- **Interview Kit Generator** - Context-aware question generation
+- **Market Insights Agent** - Real-time talent pool analysis
+- **Job Description Generator** - Professional content creation
+
+### **AI Features**
+<table>
+<tr>
+<td width="50%">
+
+**🎯 Smart Analysis**
+- Code quality assessment
+- Technical skill evaluation
+- Experience level detection
+- Hiring recommendation engine
+- Success probability prediction
+
+</td>
+<td width="50%">
+
+**🔍 Intelligent Matching**
+- Semantic candidate search
+- Skill-based filtering
+- Role compatibility scoring
+- Market trend analysis
+- Salary recommendation AI
+
+</td>
+</tr>
+</table>
+
+---
+
 ## 🚀 Quick Start
 
 ### **For Developers**
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/PortReview.git
+git clone https://github.com/Pranay50x/PortReview.git
 cd PortReview
 
-# 2. Install dependencies
+# 2. Set up environment variables
+cp frontend/.env.example frontend/.env
+# Add your API keys (GitHub OAuth, Google OAuth, Gemini API)
+
+# 3. Install dependencies
 # Frontend
 cd frontend && npm install
 
 # Backend
 cd ../backend && pip install -r requirements.txt
 
-# 3. Set up environment variables
-cp .env.example .env
-# Add your API keys and configuration
-
 # 4. Start the services
-# Backend
-uvicorn app.main:app --reload
+# Backend (Terminal 1)
+cd backend && uvicorn app.main:app --reload
 
-# Frontend (new terminal)
-npm run dev
+# Frontend (Terminal 2) 
+cd frontend && npm run dev
 ```
 
 ### **For Users**
@@ -212,13 +267,13 @@ PortReview/
 </div>
 
 ### **Generated Portfolio Includes:**
-- ✅ **Professional bio** generated by AI
-- ✅ **Technical skills** analysis with percentages
+- ✅ **AI-generated professional bio** using LangChain
+- ✅ **Technical skills analysis** with AI-powered percentages
 - ✅ **Project highlights** with impact scoring
-- ✅ **Code quality metrics** (0-100 scale)
-- ✅ **Interview questions** based on your code
-- ✅ **Career progression** insights
-- ✅ **Shareable portfolio** URL
+- ✅ **Code quality metrics** (0-100 scale with AI evaluation)
+- ✅ **Smart interview questions** based on your actual code
+- ✅ **Career progression insights** from AI analysis
+- ✅ **Shareable portfolio URL** with analytics tracking
 
 ---
 
@@ -229,21 +284,23 @@ PortReview/
 <td width="50%">
 
 ### **For Developers**
-- 📈 Portfolio view analytics
-- 🎯 Skill progression tracking
-- 💡 AI-powered career suggestions
-- ⭐ Code quality improvements
-- 🔍 GitHub activity insights
+- 📈 Portfolio view analytics & tracking
+- 🎯 AI-driven skill progression insights
+- 💡 LangChain-powered career suggestions
+- ⭐ Intelligent code quality improvements
+- 🔍 GitHub activity analysis with AI insights
+- 🚀 Auto-generated portfolio content
 
 </td>
 <td width="50%">
 
 ### **For Recruiters**
-- 🎪 Candidate discovery tools
-- 📋 Technical assessment reports
-- 🤝 Smart matching algorithms
-- 📊 Comparative analytics
-- 💬 Interview question generation
+- 🎪 AI-powered candidate discovery tools
+- 📋 LangChain-driven technical assessments
+- 🤝 Smart matching algorithms with AI
+- 📊 Comparative analytics and insights
+- 💬 Context-aware interview question generation
+- 🧠 Recruitment intelligence with Gemini AI
 
 </td>
 </tr>
@@ -257,13 +314,16 @@ PortReview/
   <img src="https://img.shields.io/badge/Security-OAuth_2.0-green?style=for-the-badge&logo=oauth&logoColor=white" alt="OAuth">
   <img src="https://img.shields.io/badge/Privacy-GDPR_Compliant-blue?style=for-the-badge&logo=privacy&logoColor=white" alt="GDPR">
   <img src="https://img.shields.io/badge/Data-Encrypted-red?style=for-the-badge&logo=lock&logoColor=white" alt="Encrypted">
+  <img src="https://img.shields.io/badge/JWT_Secure-10B981?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT">
 </div>
 
-- 🔐 **Secure GitHub OAuth** authentication
-- 🛡️ **End-to-end encryption** for sensitive data
-- 🚫 **No password storage** - OAuth only
-- 📝 **GDPR compliant** data handling
-- 🔄 **Automatic duplicate prevention**
+- 🔐 **Secure OAuth 2.0** - GitHub (Developers) + Google (Recruiters)
+- 🛡️ **Enhanced security** with CSRF protection & rate limiting
+- � **JWT-based authentication** with secure token refresh
+- 🚫 **Zero password storage** - OAuth-only architecture
+- 📝 **GDPR compliant** data handling & privacy
+- 🔄 **Request deduplication** prevents OAuth abuse
+- 🛡️ **Production-grade security** with input validation
 
 ---
 

@@ -20,6 +20,7 @@ export interface AuthResult {
 class SecureAuthService {
   private baseUrl = '/api/auth';
   private csrfToken: string | null = null;
+  private pendingRequests = new Map<string, Promise<AuthResult>>();
   
   // Initialize CSRF token on service creation
   constructor() {
@@ -154,6 +155,28 @@ class SecureAuthService {
    * Handle GitHub OAuth callback securely
    */
   async handleGitHubCallback(code: string, state?: string): Promise<AuthResult> {
+    // Create a unique request key for deduplication
+    const requestKey = `github_callback_${code}_${state || 'no_state'}`;
+    
+    // Check if this request is already in progress
+    if (this.pendingRequests.has(requestKey)) {
+      console.log('GitHub callback already in progress, returning existing promise');
+      return this.pendingRequests.get(requestKey)!;
+    }
+    
+    // Create and store the promise
+    const requestPromise = this.executeGitHubCallback(code, state);
+    this.pendingRequests.set(requestKey, requestPromise);
+    
+    // Clean up after completion
+    requestPromise.finally(() => {
+      this.pendingRequests.delete(requestKey);
+    });
+    
+    return requestPromise;
+  }
+
+  private async executeGitHubCallback(code: string, state?: string): Promise<AuthResult> {
     try {
       console.log('=== handleGitHubCallback started ===');
       console.log('Code:', code ? 'Present' : 'Missing');
@@ -249,6 +272,28 @@ class SecureAuthService {
    * Handle Google OAuth callback securely
    */
   async handleGoogleCallback(code: string, state?: string): Promise<AuthResult> {
+    // Create a unique request key for deduplication
+    const requestKey = `google_callback_${code}_${state || 'no_state'}`;
+    
+    // Check if this request is already in progress
+    if (this.pendingRequests.has(requestKey)) {
+      console.log('Google callback already in progress, returning existing promise');
+      return this.pendingRequests.get(requestKey)!;
+    }
+    
+    // Create and store the promise
+    const requestPromise = this.executeGoogleCallback(code, state);
+    this.pendingRequests.set(requestKey, requestPromise);
+    
+    // Clean up after completion
+    requestPromise.finally(() => {
+      this.pendingRequests.delete(requestKey);
+    });
+    
+    return requestPromise;
+  }
+
+  private async executeGoogleCallback(code: string, state?: string): Promise<AuthResult> {
     try {
       // Verify state parameter to prevent CSRF
       const storedState = sessionStorage.getItem('google_oauth_state');
