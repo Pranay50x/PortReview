@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth-secure';
 import { 
   Github, 
   Zap, 
@@ -53,7 +53,7 @@ interface LoadingStep {
 }
 
 export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortfolioProps) {
-  const [user, setUser] = useState(getCurrentUser());
+  const [user, setUser] = useState<any>(null);
   const [githubUsername, setGithubUsername] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPortfolio, setGeneratedPortfolio] = useState<any>(null);
@@ -62,6 +62,7 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
   const [useLoggedInUser, setUseLoggedInUser] = useState(true);
   const [currentStep, setCurrentStep] = useState(-1);
   const [progress, setProgress] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const loadingSteps: LoadingStep[] = [
     {
@@ -109,14 +110,24 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
   const [steps, setSteps] = useState(loadingSteps);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    setUser(currentUser);
+    const loadUser = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        
+        // Auto-fill with logged-in user's GitHub username
+        const githubUsername = getGitHubUsername(currentUser);
+        if (githubUsername) {
+          setGithubUsername(githubUsername);
+        }
+      } catch (error) {
+        console.error('Error loading user:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // Auto-fill with logged-in user's GitHub username
-    const githubUsername = getGitHubUsername(currentUser);
-    if (githubUsername) {
-      setGithubUsername(githubUsername);
-    }
+    loadUser();
   }, []);
 
   const getEffectiveUsername = () => {
@@ -261,6 +272,16 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+      {/* Loading Screen */}
+      {loading && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-white text-lg">Loading portfolio generator...</p>
+          </div>
+        </div>
+      )}
+
       {/* Animated Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>

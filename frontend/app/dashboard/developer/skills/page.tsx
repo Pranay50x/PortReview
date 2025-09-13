@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import AuthGuard from '@/components/SecureAuthGuard';
+import SecureAuthGuard from '@/components/SecureAuthGuard';
 import { secureAuthService } from '@/lib/auth-secure';
 
 // Use environment variable for API URL
@@ -343,8 +343,8 @@ function SkillTrackerContent() {
 
 export default function SkillTracker() {
   return (
-    <AuthGuard requiredUserType="developer">
+    <SecureAuthGuard requiredUserType="developer">
       <SkillTrackerContent />
-    </AuthGuard>
+    </SecureAuthGuard>
   );
 }

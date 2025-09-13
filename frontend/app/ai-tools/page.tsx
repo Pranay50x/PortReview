@@ -14,7 +14,7 @@ import {
   TrendingUp,
   BarChart3
 } from 'lucide-react';
-import AuthGuard from '@/components/AuthGuard';
+import SecureAuthGuard from '@/components/SecureAuthGuard';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -230,8 +230,8 @@ function AIToolsContent() {
 
 export default function AITools() {
   return (
-    <AuthGuard requiredUserType="recruiter">
+    <SecureAuthGuard requiredUserType="recruiter">
       <AIToolsContent />
-    </AuthGuard>
+    </SecureAuthGuard>
   );
 }

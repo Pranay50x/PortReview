@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { recruitmentAIService } from '@/lib/recruitment-ai-service';
 import { createJobDescriptionPDF } from '@/lib/pdf-utils';
-import AuthGuard from '@/components/AuthGuard';
+import SecureAuthGuard from '@/components/SecureAuthGuard';
 
 export default function JobDescriptionPage() {
   const router = useRouter();
@@ -106,7 +106,7 @@ export default function JobDescriptionPage() {
   };
 
   return (
-    <AuthGuard>
+    <SecureAuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
         {/* Animated Background Effects */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -377,6 +377,6 @@ export default function JobDescriptionPage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
+    </SecureAuthGuard>
   );
 }

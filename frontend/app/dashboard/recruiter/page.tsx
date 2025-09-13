@@ -32,7 +32,7 @@ import {
   Sparkles,
   ArrowUpRight
 } from 'lucide-react';
-import AuthGuard from '@/components/SecureAuthGuard';
+import SecureAuthGuard from '@/components/SecureAuthGuard';
 import { secureAuthService, type SecureUser } from '@/lib/auth-secure';
 import { useRouter } from 'next/navigation';
 
@@ -663,8 +663,8 @@ function RecruiterDashboardContent() {
 
 export default function RecruiterDashboard() {
   return (
-    <AuthGuard requiredUserType="recruiter">
+    <SecureAuthGuard requiredUserType="recruiter">
       <RecruiterDashboardContent />
-    </AuthGuard>
+    </SecureAuthGuard>
   );
 }
