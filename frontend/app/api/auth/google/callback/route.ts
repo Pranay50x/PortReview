@@ -2,35 +2,102 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { code, userType } = await request.json();
+    console.log('=== Google OAuth Callback (Backend) - SIMPLIFIED ===');
+    
+    // Parse request body safely
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
+    const { code, userType } = body;
 
     if (!code) {
+      console.log('Missing authorization code');
       return NextResponse.json({ error: 'Authorization code is required' }, { status: 400 });
     }
 
-    console.log('=== Google OAuth Callback (Backend) ===');
     console.log('User type:', userType);
     console.log('Code present:', code ? 'Yes' : 'No');
 
+    // Check environment variables
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = `${request.nextUrl.origin}/auth/google/callback`;
+
+    console.log('Environment check:');
+    console.log('- Client ID:', clientId ? `${clientId.substring(0, 20)}...` : 'MISSING');
+    console.log('- Client Secret:', clientSecret ? `${clientSecret.substring(0, 10)}...` : 'MISSING');
+    console.log('- Redirect URI:', redirectUri);
+
+    if (!clientId || !clientSecret) {
+      console.error('Google OAuth environment variables missing');
+      return NextResponse.json({
+        error: 'Google OAuth is not properly configured',
+        debug: {
+          clientId: clientId ? 'SET' : 'MISSING',
+          clientSecret: clientSecret ? 'SET' : 'MISSING'
+        }
+      }, { status: 500 });
+    }
+
     // Exchange code for access token
-    const tokenResponse = await fetch(`${request.nextUrl.origin}/api/auth/google/token`, {
+    console.log('Starting token exchange...');
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri,
+      }),
     });
 
+    console.log('Google token response status:', tokenResponse.status);
+
     if (!tokenResponse.ok) {
-      const tokenError = await tokenResponse.json();
-      console.error('Token exchange failed:', tokenError);
-      return NextResponse.json({ 
-        error: 'Failed to exchange code for access token',
-        detail: tokenError.error 
+      const errorText = await tokenResponse.text();
+      console.error('Google token exchange failed:', errorText);
+      return NextResponse.json({
+        error: 'Failed to exchange authorization code for token',
+        status: tokenResponse.status,
+        detail: errorText,
+        redirectUri
       }, { status: 400 });
     }
 
-    const { access_token } = await tokenResponse.json();
+    let tokenData;
+    try {
+      tokenData = await tokenResponse.json();
+    } catch (parseError) {
+      const responseText = await tokenResponse.text();
+      console.error('Failed to parse token response:', responseText);
+      return NextResponse.json({
+        error: 'Invalid token response format',
+        detail: responseText
+      }, { status: 500 });
+    }
+
+    if (tokenData.error) {
+      console.error('Google returned error:', tokenData.error);
+      return NextResponse.json({
+        error: tokenData.error_description || tokenData.error,
+        detail: tokenData
+      }, { status: 400 });
+    }
+
+    const { access_token } = tokenData;
+    console.log('Access token received:', access_token ? 'Yes' : 'No');
 
     // Get user data from Google
+    console.log('Fetching user data...');
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { 
         'Authorization': `Bearer ${access_token}`,
@@ -38,15 +105,20 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    console.log('Google user response status:', userResponse.status);
+
     if (!userResponse.ok) {
-      console.error('Failed to fetch Google user data');
+      const errorText = await userResponse.text();
+      console.error('Failed to fetch Google user data:', errorText);
       return NextResponse.json({ 
-        error: 'Failed to fetch user data from Google' 
+        error: 'Failed to fetch user data from Google',
+        status: userResponse.status,
+        detail: errorText
       }, { status: 400 });
     }
 
     const googleUser = await userResponse.json();
-    console.log('Google user:', googleUser.name);
+    console.log('Google user fetched:', googleUser.name);
 
     // Create user object
     const user = {
@@ -58,32 +130,8 @@ export async function POST(request: NextRequest) {
       is_active: true
     };
 
-    // Save user to MongoDB/database (non-blocking)
-    try {
-      console.log('Attempting to save user to database...');
-      const saveResponse = await fetch(`${request.nextUrl.origin}/api/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: user.email,
-          name: user.name,
-          user_type: 'recruiter',
-          profile: {
-            avatar_url: user.avatar_url,
-          }
-        })
-      });
-
-      if (saveResponse.ok) {
-        console.log('User saved to database successfully');
-      } else {
-        const errorText = await saveResponse.text();
-        console.warn('Failed to save user to database (non-critical):', saveResponse.status, errorText);
-      }
-    } catch (error) {
-      console.warn('Database save error (non-critical):', error instanceof Error ? error.message : 'Unknown error');
-      // Continue with OAuth even if database save fails
-    }
+    // Skip database save for now and just return success
+    console.log('Google OAuth successful for:', user.name);
 
     // Set auth cookie
     const response = NextResponse.json({ 
@@ -93,21 +141,21 @@ export async function POST(request: NextRequest) {
     });
 
     response.cookies.set('auth-token', JSON.stringify(user), {
-      httpOnly: false, // Need to read in client
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/'
     });
 
-    console.log('Google OAuth successful for:', user.name);
     return response;
 
   } catch (error) {
     console.error('Google OAuth callback error:', error);
     return NextResponse.json({ 
       error: 'Internal server error during Google authentication',
-      detail: error instanceof Error ? error.message : 'Unknown error'
+      detail: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     }, { status: 500 });
   }
 }
