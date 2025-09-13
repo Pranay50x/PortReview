@@ -10,8 +10,21 @@ async function connectToDatabase() {
     return { client: cachedClient, db: cachedDb };
   }
 
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-  const dbName = process.env.MONGODB_DB || 'portreview';
+  const uri = process.env.MONGODB_URI;
+  const dbName = process.env.MONGODB_DB;
+
+  if (!uri) {
+    console.error('MONGODB_URI environment variable is not set');
+    throw new Error('Database configuration missing - MONGODB_URI not found');
+  }
+
+  if (!dbName) {
+    console.error('MONGODB_DB environment variable is not set');
+    throw new Error('Database configuration missing - MONGODB_DB not found');
+  }
+
+  console.log('Connecting to MongoDB:', uri.substring(0, 30) + '...');
+  console.log('Database name:', dbName);
 
   try {
     const client = new MongoClient(uri);
@@ -21,10 +34,11 @@ async function connectToDatabase() {
     cachedClient = client;
     cachedDb = db;
 
+    console.log('Successfully connected to MongoDB');
     return { client, db };
   } catch (error) {
     console.error('Failed to connect to MongoDB:', error);
-    throw new Error('Database connection failed');
+    throw new Error(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -189,8 +203,21 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error creating/updating user:', error);
+    
+    // Provide more specific error information
+    let errorMessage = 'Internal server error';
+    if (error instanceof Error) {
+      if (error.message.includes('Database connection failed')) {
+        errorMessage = 'Database connection failed - check MongoDB configuration';
+      } else if (error.message.includes('MONGODB_URI')) {
+        errorMessage = 'MongoDB configuration missing';
+      } else {
+        errorMessage = `Database error: ${error.message}`;
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: errorMessage, detail: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

@@ -86,8 +86,9 @@ export async function POST(request: NextRequest) {
       is_active: true
     };
 
-    // Save user to MongoDB/database
+    // Save user to MongoDB/database (non-blocking)
     try {
+      console.log('Attempting to save user to database...');
       const saveResponse = await fetch(`${request.nextUrl.origin}/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -102,11 +103,15 @@ export async function POST(request: NextRequest) {
         })
       });
 
-      if (!saveResponse.ok) {
-        console.warn('Failed to save user to database, continuing...');
+      if (saveResponse.ok) {
+        console.log('User saved to database successfully');
+      } else {
+        const errorText = await saveResponse.text();
+        console.warn('Failed to save user to database (non-critical):', saveResponse.status, errorText);
       }
     } catch (error) {
-      console.warn('Database save error:', error);
+      console.warn('Database save error (non-critical):', error instanceof Error ? error.message : 'Unknown error');
+      // Continue with OAuth even if database save fails
     }
 
     // Set auth cookie
