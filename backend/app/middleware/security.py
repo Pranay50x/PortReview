@@ -14,6 +14,7 @@ import json
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 import re
+from app.core.config import settings
 
 class SecurityMiddleware(BaseHTTPMiddleware):
     """Enhanced security middleware for comprehensive protection."""
@@ -261,16 +262,13 @@ def setup_security_middleware(app: FastAPI):
     # Trust only specific hosts in production
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["localhost", "127.0.0.1", "*.yourdomain.com"]
+        allowed_hosts=["localhost", "127.0.0.1", "portreview.appwrite.network", "*.appwrite.network"]
     )
     
     # CORS with strict settings
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",  # Next.js dev server
-            "https://yourdomain.com"  # Production domain
-        ],
+        allow_origins=settings.cors_origins,
         allow_credentials=True,  # Required for httpOnly cookies
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=[

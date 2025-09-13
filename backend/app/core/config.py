@@ -14,18 +14,18 @@ class Settings(BaseSettings):
     # GitHub OAuth
     github_client_id: Optional[str] = None
     github_client_secret: Optional[str] = None
-    github_redirect_uri: str = "http://localhost:3000/auth/callback"
+    github_redirect_uri: str = "https://portreview.appwrite.network/auth/callback"
     
     # External APIs
     github_token: Optional[str] = None
     gemini_api_key: Optional[str] = None
     
     # CORS - simplified to avoid JSON parsing issues
-    backend_cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001"
+    backend_cors_origins: str = "https://portreview.appwrite.network,http://localhost:3000,http://127.0.0.1:3000"
     
     # Environment
-    environment: str = "development"
-    debug: bool = True
+    environment: str = "production"
+    debug: bool = False
     
     @property
     def cors_origins(self) -> List[str]:
