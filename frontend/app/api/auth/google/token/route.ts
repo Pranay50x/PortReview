@@ -16,6 +16,11 @@ export async function POST(request: NextRequest) {
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = `${request.nextUrl.origin}/auth/google/callback`;
 
+    console.log('Google token exchange - Environment check:');
+    console.log('- Client ID:', clientId ? `${clientId.substring(0, 20)}...` : 'MISSING');
+    console.log('- Client Secret:', clientSecret ? `${clientSecret.substring(0, 10)}...` : 'MISSING');
+    console.log('- Redirect URI:', redirectUri);
+
     if (!clientId || !clientSecret) {
       return NextResponse.json(
         { error: 'Google OAuth is not properly configured' },
@@ -38,11 +43,22 @@ export async function POST(request: NextRequest) {
       }),
     });
 
+    console.log('Google token response status:', tokenResponse.status);
+
     if (!tokenResponse.ok) {
-      const errorData = await tokenResponse.text();
-      console.error('Google token exchange failed:', errorData);
+      const errorText = await tokenResponse.text();
+      console.error('Google token exchange failed:', errorText);
+      
+      // Try to parse as JSON, fallback to text
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText };
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to exchange authorization code for token' },
+        { error: 'Failed to exchange authorization code for token', detail: errorData },
         { status: 400 }
       );
     }

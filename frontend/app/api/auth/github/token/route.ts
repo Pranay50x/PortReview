@@ -11,6 +11,10 @@ export async function POST(request: NextRequest) {
     const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
     const clientSecret = process.env.GITHUB_CLIENT_SECRET;
 
+    console.log('GitHub token exchange - Environment check:');
+    console.log('- Client ID:', clientId ? `${clientId.substring(0, 20)}...` : 'MISSING');
+    console.log('- Client Secret:', clientSecret ? `${clientSecret.substring(0, 10)}...` : 'MISSING');
+
     if (!clientId || !clientSecret) {
       console.error('GitHub OAuth environment variables missing:', { clientId: !!clientId, clientSecret: !!clientSecret });
       return NextResponse.json(
@@ -33,8 +37,24 @@ export async function POST(request: NextRequest) {
       }),
     });
 
+    console.log('GitHub token response status:', tokenResponse.status);
+
     if (!tokenResponse.ok) {
-      throw new Error('Failed to exchange code for token');
+      const errorText = await tokenResponse.text();
+      console.error('GitHub token exchange failed:', errorText);
+      
+      // Try to parse as JSON, fallback to text
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText };
+      }
+      
+      return NextResponse.json(
+        { error: 'Failed to exchange code for token', detail: errorData },
+        { status: 500 }
+      );
     }
 
     const tokenData = await tokenResponse.json();
