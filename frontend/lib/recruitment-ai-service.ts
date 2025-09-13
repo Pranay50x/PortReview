@@ -1,5 +1,5 @@
 // Recruitment AI Service for connecting to Python backend recruitment AI endpoints
-const AI_API_BASE_URL = 'http://localhost:8000';
+const AI_API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface CandidateProfile {
   id: string;

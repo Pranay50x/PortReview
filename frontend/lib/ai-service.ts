@@ -1,7 +1,7 @@
 // AI Service for connecting only AI features to Python backend
 // Authentication is handled locally in Next.js
 
-const AI_API_BASE_URL = 'http://localhost:8000';
+const AI_API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface GitHubRepo {
   name: string;

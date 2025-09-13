@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     github_token: Optional[str] = None
     gemini_api_key: Optional[str] = None
     
-    # CORS - simplified to avoid JSON parsing issues
-    backend_cors_origins: str = "https://portreview.appwrite.network,http://localhost:3000,http://127.0.0.1:3000"
+    # CORS - load from environment variable
+    backend_cors_origins: str = "https://portreview.appwrite.network,http://localhost:3000"
     
     # Environment
     environment: str = "production"

@@ -31,9 +31,7 @@ interface UserActivity {
 }
 
 class GitHubAnalyticsService {
-  private baseUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://api.portreview.com' 
-    : 'http://localhost:8000';
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   // Get GitHub stats for current user
   async getCurrentUserGitHubStats(): Promise<GitHubStats> {
