@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { getCurrentUser } from '@/lib/auth-secure';
-import { getApiUrl } from '@/lib/url-utils';
 import { 
   Github, 
   Zap, 
@@ -30,7 +29,7 @@ import {
   Eye
 } from 'lucide-react';
 
-// Use environment variable for API URL - removed since using utility
+// Use environment variable for API URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const getGitHubUsername = (user: any): string => {
@@ -208,7 +207,7 @@ export default function AutoPortfolioGenerator({ onPortfolioCreated }: AutoPortf
       // Start loading animation
       await simulateLoadingSteps();
 
-      const response = await fetch(getApiUrl('/api/auto-portfolio/create-from-github'), {
+      const response = await fetch(`${API_BASE_URL}/api/auto-portfolio/create-from-github`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
