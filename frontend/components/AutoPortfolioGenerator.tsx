@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 
 // Use environment variable for API URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
 const getGitHubUsername = (user: any): string => {
   if (user && 'github_username' in user) {
