@@ -116,6 +116,28 @@ export async function POST(request: NextRequest) {
     const githubUser = await userResponse.json();
     console.log('GitHub user fetched:', githubUser.login);
 
+        const saveUserResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'https://portreview.appwrite.network'}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: githubUser.email,
+        name: githubUser.name || githubUser.login,
+        user_type: 'developer',
+        github_username: githubUser.login,
+        profile: {
+          avatar_url: githubUser.avatar_url,
+          bio: githubUser.bio,
+          location: githubUser.location,
+        }
+      }),
+    });
+
+    if (!saveUserResponse.ok) {
+      console.error('Failed to save GitHub user to DB:', await saveUserResponse.text());
+    } else {
+      console.log('GitHub user saved to DB:', githubUser.login);
+    }
+
     // Create simplified user object
     const user = {
       id: githubUser.id.toString(),

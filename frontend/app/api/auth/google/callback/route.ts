@@ -129,6 +129,26 @@ export async function POST(request: NextRequest) {
     const googleUser = await userResponse.json();
     console.log('Google user fetched:', googleUser.name);
 
+    const saveUserResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'https://portreview.appwrite.network'}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: googleUser.email,
+        name: googleUser.name,
+        user_type: userType, // from state param
+        profile: {
+          avatar_url: googleUser.picture,
+        }
+      }),
+    });
+
+    if (!saveUserResponse.ok) {
+      console.error('Failed to save user to DB:', await saveUserResponse.text());
+    } else {
+      console.log('User saved to DB:', googleUser.email);
+    }
+
+
     // Create user object
     const user = {
       id: googleUser.id.toString(),
