@@ -1,4 +1,6 @@
 // Frontend service for GitHub analytics and stats
+import { getApiUrl } from './url-utils';
+
 interface GitHubStats {
   public_repos: number;
   followers: number;
@@ -31,8 +33,6 @@ interface UserActivity {
 }
 
 class GitHubAnalyticsService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
   // Get GitHub stats for current user
   async getCurrentUserGitHubStats(): Promise<GitHubStats> {
     try {
@@ -45,7 +45,7 @@ class GitHubAnalyticsService {
         return this.getMockStats();
       }
 
-      const response = await fetch(`${this.baseUrl}/api/github/stats/${currentUser.github_username}`, {
+      const response = await fetch(getApiUrl(`/api/github/stats/${currentUser.github_username}`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ class GitHubAnalyticsService {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${this.baseUrl}/api/analytics/portfolio-views`, {
+      const response = await fetch(getApiUrl('/api/analytics/portfolio-views'), {
         method: 'GET',
         headers,
         credentials: 'include',
@@ -127,7 +127,7 @@ class GitHubAnalyticsService {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${this.baseUrl}/api/users/me/activity`, {
+      const response = await fetch(getApiUrl('/api/users/me/activity'), {
         method: 'GET',
         headers,
         credentials: 'include',
@@ -148,7 +148,7 @@ class GitHubAnalyticsService {
   // Get repositories for current user
   async getCurrentUserRepositories(): Promise<GitHubRepository[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/github/repositories`, {
+      const response = await fetch(getApiUrl('/api/github/repositories'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ class GitHubAnalyticsService {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      await fetch(`${this.baseUrl}/api/analytics/portfolio-view`, {
+      await fetch(getApiUrl('/api/analytics/portfolio-view'), {
         method: 'POST',
         headers,
         body: JSON.stringify({

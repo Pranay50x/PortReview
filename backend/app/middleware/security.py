@@ -262,17 +262,34 @@ def setup_security_middleware(app: FastAPI):
         allowed_hosts=trusted_hosts
     )
     
-    # CORS settings for production deployment
+    # CORS settings - get from environment
     cors_origins = settings.cors_origins
     print(f"🌐 CORS origins: {cors_origins}")
     
+    # Add CORS middleware with proper preflight handling
     app.add_middleware(
         CORSMiddleware,
         allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
-        allow_headers=["*"],
-        expose_headers=["X-Process-Time"]
+        allow_headers=[
+            "Accept",
+            "Accept-Language", 
+            "Content-Language",
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+            "X-CSRF-Token",
+            "Origin",
+            "User-Agent",
+            "DNT",
+            "Cache-Control",
+            "X-Mx-ReqToken",
+            "Keep-Alive",
+            "If-Modified-Since"
+        ],
+        expose_headers=["X-Process-Time"],
+        max_age=3600  # Cache preflight for 1 hour
     )
     
     # Custom security middleware (simplified for production)

@@ -19,8 +19,9 @@ import {
 } from 'lucide-react';
 import SecureAuthGuard from '@/components/SecureAuthGuard';
 import { getCurrentUser } from '@/lib/auth-secure';
+import { getApiUrl } from '@/lib/url-utils';
 
-// Use environment variable for API URL
+// Use environment variable for API URL - removed since using utility
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface AISuggestionsData {

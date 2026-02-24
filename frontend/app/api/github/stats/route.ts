@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // GitHub Analytics API proxy to backend
 export async function GET(request: NextRequest) {
   try {
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = (process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
     
     // Get user from headers or session
     const userEmail = request.headers.get('x-user-email');
